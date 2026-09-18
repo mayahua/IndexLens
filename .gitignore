@@ -1,0 +1,22 @@
+# macOS Desktop Services Store
+.DS_Store
+
+# API keys
+.env
+
+# Python environments and generated files
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Tool caches and coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local datasets and generated data
+/data
