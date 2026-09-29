@@ -21,6 +21,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "mypy",
+    "pandas-stubs",
     "pytest",
     "ruff",
 ]
