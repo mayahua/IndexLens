@@ -95,7 +95,7 @@ Snapshots copy source-wide audit issues and add these nonblocking warnings when 
 | `duplicate_active_identity` | Multiple selected rows represent the same `(symbol, cik)` on the query date |
 | `multiple_active_ciks` | A selected symbol has more than one active CIK on the query date |
 
-Warnings retain every selected row. Their `row_count` counts all participating rows, and their details identify the query date. Nonoverlapping intervals do not trigger these warnings. Snapshot comparisons retain each endpoint's issues.
+Warnings retain every selected row. Their `row_count` counts all participating rows, and their details identify the query date. Nonoverlapping intervals do not trigger these warnings. Snapshot comparisons retain each endpoint's issues. The in-memory and PostgreSQL snapshot functions share the same warning builder.
 
 Source event tables retain source-wide audit issues, including equal-endpoint findings, even when no event rows fall in coverage. Event-specific approximation and `created_after_event` flags are columns in `event_table.data`.
 

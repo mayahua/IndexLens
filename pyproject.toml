@@ -13,7 +13,9 @@ dependencies = [
     "numpy",
     "pandas",
     "requests",
-    "sqlalchemy",
+    "sqlalchemy>=2.0,<2.1",
+    "alembic>=1.13,<2",
+    "psycopg[binary]>=3.2,<4",
     "python-dotenv",
 ]
 
@@ -57,3 +59,5 @@ addopts = [
 testpaths = [
     "tests",
 ]
+
+markers = ["postgres: requires INDEXLENS_TEST_DATABASE_URL and PostgreSQL"]

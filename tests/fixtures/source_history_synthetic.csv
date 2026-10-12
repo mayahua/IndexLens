@@ -1,0 +1,11 @@
+symbol,cik,name,sector,date_added,date_removed,created_at
+ALFA,0001,Alpha,industrials,2025-12-15,,2026-01-01
+BETA,0002,Beta,industrials,2026-01-05*,2026-01-10*,2026-01-07
+BETA,0002,Beta re-entry,industrials,2026-01-20,,2026-01-20
+ZERO,0003,Equal endpoints,industrials,2026-01-08,2026-01-08,2026-01-09
+DUAL,0004,First identity,industrials,2026-01-05,,2026-01-05
+DUAL,0005,Second identity,industrials,2026-01-05,,2026-01-05
+DUAL,0004,Repeated interval,industrials,2026-01-06,,2026-01-06
+ALFB,0001,Shared CIK,industrials,2026-01-02,,2026-01-02
+FUTURE,0006,Future interval,industrials,2026-02-01,,2026-02-01
+BASE,0007,Baseline removal,industrials,2025-12-01,2026-01-01,2025-12-01

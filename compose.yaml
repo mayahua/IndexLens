@@ -1,0 +1,19 @@
+name: indexlens
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: indexlens
+      POSTGRES_PASSWORD: indexlens_local
+      POSTGRES_DB: indexlens
+    ports:
+      - "127.0.0.1:${INDEXLENS_DB_PORT:-55432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U indexlens -d indexlens"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+volumes:
+  postgres_data:

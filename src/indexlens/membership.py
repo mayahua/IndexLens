@@ -80,8 +80,8 @@ def prepare_history(
 
     Pass a fresh audit in original source order, before sorting or filtering.
     The caller provides the matching file hash and the verified coverage.
-    Output column source_record_position. Preserve warnings and all rows, 
-    including those outside the query coverage. Raise ValueError for a failed audit 
+    Output column source_record_position. Preserve warnings and all rows,
+    including those outside the query coverage. Raise ValueError for a failed audit
     or reversed coverage.
     """
     if not audit_result.report.is_valid:
@@ -102,6 +102,36 @@ def prepare_history(
         coverage_end=coverage_end,
         issues=issues,
     )
+
+
+def _snapshot_issues(
+    members: pd.DataFrame, as_of: date, source_issues: list[ValidationIssue]
+) -> list[ValidationIssue]:
+    """Copy source findings and append dated active-identity warnings."""
+    issues = deepcopy(source_issues)
+
+    repeated_identity = members.duplicated(["symbol", "cik"], keep=False)
+    if repeated_identity.any():
+        issues.append(
+            ValidationIssue(
+                "duplicate_active_identity",
+                f"Multiple source rows represent the same (symbol, cik) on {as_of}.",
+                row_count=int(repeated_identity.sum()),
+            )
+        )
+
+    multiple_ciks = members.groupby("symbol")["cik"].transform("nunique") > 1
+    if multiple_ciks.any():
+        issues.append(
+            ValidationIssue(
+                "multiple_active_ciks",
+                f"A symbol has multiple active CIKs on {as_of}.",
+                column="symbol",
+                row_count=int(multiple_ciks.sum()),
+            )
+        )
+
+    return issues
 
 
 def membership_at(history: PreparedHistory, as_of: date) -> MembershipSnapshot:
@@ -128,28 +158,7 @@ def membership_at(history: PreparedHistory, as_of: date) -> MembershipSnapshot:
 
     membership_mask = added_by & not_removed_by & created_by
     members = data.loc[membership_mask].copy()
-    issues = deepcopy(history.issues)
-
-    repeated_identity = members.duplicated(["symbol", "cik"], keep=False)
-    if repeated_identity.any():
-        issues.append(
-            ValidationIssue(
-                "duplicate_active_identity",
-                f"Multiple source rows represent the same (symbol, cik) on {as_of}.",
-                row_count=int(repeated_identity.sum()),
-            )
-        )
-
-    multiple_ciks = members.groupby("symbol")["cik"].transform("nunique") > 1
-    if multiple_ciks.any():
-        issues.append(
-            ValidationIssue(
-                "multiple_active_ciks",
-                f"A symbol has multiple active CIKs on {as_of}.",
-                column="symbol",
-                row_count=int(multiple_ciks.sum()),
-            )
-        )
+    issues = _snapshot_issues(members, as_of, history.issues)
 
     return MembershipSnapshot(
         data=members,
