@@ -1,0 +1,10 @@
+{
+  "dataset_id": "synthetic-price-example-v1",
+  "data_kind": "synthetic",
+  "provider": "synthetic_fixture",
+  "price_basis": "synthetic_unadjusted",
+  "retrieved_at": "2026-10-12T12:00:00Z",
+  "source_reference": "indexlens-public-synthetic-fixture-v1",
+  "adjustment_settings": {"auto_adjust": false, "back_adjust": false},
+  "source_notes": "Invented software-test data, not market observations. Review: 2026-10-12; redistribution allowed. Extra columns illustrate retained evidence."
+}

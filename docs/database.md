@@ -1,6 +1,8 @@
-# PostgreSQL source history
+# PostgreSQL source history and price evidence
 
-This increment stores audited membership CSVs and their source events.
+The database stores audited membership CSVs, source events, and offline price
+evidence. See [price ingestion](prices.md) for migration `0002` and the repeatable
+CSV command. Live Yahoo fetching is documented in the price guide.
 The existing in-memory membership library remains the semantic reference.
 
 ## Local setup
@@ -107,8 +109,8 @@ make a correction. Existing versions are not silently rewritten.
 ```sh
 export INDEXLENS_TEST_DATABASE_URL="$INDEXLENS_DATABASE_URL"
 python -m pytest -q
-python -m ruff check src/indexlens/data_audit.py src/indexlens/membership.py src/indexlens/db tests migrations
-MYPYPATH=src python -m mypy --explicit-package-bases src/indexlens/data_audit.py src/indexlens/membership.py src/indexlens/db tests migrations
+python -m ruff check src/indexlens/data_audit.py src/indexlens/membership.py src/indexlens/db src/indexlens/prices tests migrations
+MYPYPATH=src python -m mypy --explicit-package-bases src/indexlens/data_audit.py src/indexlens/membership.py src/indexlens/db src/indexlens/prices tests migrations
 ```
 
 PostgreSQL integration tests create and remove their own uniquely named schemas.
@@ -116,7 +118,7 @@ They do not clear application tables. Without the test URL they are explicitly
 skipped; supplying an unreachable URL fails. Ordinary tests make no provider calls.
 The included GitHub workflow runs these checks against a PostgreSQL service.
 
-Migration `0001` is explicit and versioned; upgrades do not call `create_all`.
+Migrations `0001` (source history) and `0002` (price evidence) are explicit and versioned; upgrades do not call `create_all`.
 Tests check migration upgrade/downgrade/re-upgrade, schema/model agreement,
 library parity, repeated/concurrent loads, coverage conflicts, source preservation,
 foreign keys and an actual constraint failure after earlier writes. Regression

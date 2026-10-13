@@ -1,10 +1,12 @@
 """Source evidence and derived history; identities are source-local pairs."""
 
-from datetime import date
+from datetime import date, datetime
+from typing import Any
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    DateTime,
     ForeignKey,
     ForeignKeyConstraint,
     Index,
@@ -128,3 +130,86 @@ class SourceIssue(Base):
     issue_details: Mapped[str] = mapped_column(Text)
     column: Mapped[str | None] = mapped_column(Text)
     row_count: Mapped[int | None] = mapped_column(Integer)
+
+
+class PriceDataset(Base):
+    __tablename__ = "price_datasets"
+    __table_args__ = (CheckConstraint("data_kind IN ('real', 'synthetic')"),)
+
+    dataset_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    data_kind: Mapped[str] = mapped_column(Text)
+
+
+class PriceSource(Base):
+    __tablename__ = "price_sources"
+    __table_args__ = (
+        UniqueConstraint("dataset_id", "source_sha256", "metadata_sha256"),
+        UniqueConstraint("id", "dataset_id"),
+        CheckConstraint("source_sha256 ~ '^[0-9a-f]{64}$'"),
+        CheckConstraint("metadata_sha256 ~ '^[0-9a-f]{64}$'"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    dataset_id: Mapped[str] = mapped_column(ForeignKey("price_datasets.dataset_id"))
+    provider: Mapped[str] = mapped_column(Text)
+    price_basis: Mapped[str] = mapped_column(Text)
+    retrieved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    source_reference: Mapped[str] = mapped_column(Text)
+    source_sha256: Mapped[str] = mapped_column(Text)
+    metadata_sha256: Mapped[str] = mapped_column(Text)
+    source_bytes: Mapped[bytes] = mapped_column(LargeBinary)
+    declarations: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    result_counts: Mapped[dict[str, int]] = mapped_column(JSONB)
+
+
+class PriceObservation(Base):
+    __tablename__ = "price_observations"
+    __table_args__ = (
+        UniqueConstraint(
+            "dataset_id",
+            "provider",
+            "provider_symbol",
+            "observation_date",
+            "price_basis",
+        ),
+        UniqueConstraint("id", "dataset_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    dataset_id: Mapped[str] = mapped_column(ForeignKey("price_datasets.dataset_id"))
+    provider: Mapped[str] = mapped_column(Text)
+    provider_symbol: Mapped[str] = mapped_column(Text)
+    observation_date: Mapped[date]
+    price_basis: Mapped[str] = mapped_column(Text)
+    # Exact decimal strings avoid precision loss; this is the first candidate,
+    # never a selected winner when conflicted. All candidates live in price_rows.
+    normalized_values: Mapped[dict[str, str | None]] = mapped_column(JSONB)
+    conflicted: Mapped[bool] = mapped_column(Boolean)
+    prices_usable: Mapped[bool] = mapped_column(Boolean)
+    volume_usable: Mapped[bool] = mapped_column(Boolean)
+
+
+class PriceRow(Base):
+    __tablename__ = "price_rows"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["source_id", "dataset_id"],
+            ["price_sources.id", "price_sources.dataset_id"],
+        ),
+        ForeignKeyConstraint(
+            ["observation_id", "dataset_id"],
+            ["price_observations.id", "price_observations.dataset_id"],
+        ),
+        CheckConstraint("record_position >= 0"),
+        CheckConstraint("record_sha256 ~ '^[0-9a-f]{64}$'"),
+        Index("ix_price_rows_observation", "observation_id"),
+    )
+
+    source_id: Mapped[int] = mapped_column(primary_key=True)
+    record_position: Mapped[int] = mapped_column(primary_key=True)
+    dataset_id: Mapped[str] = mapped_column(Text)
+    observation_id: Mapped[int | None]
+    record_sha256: Mapped[str] = mapped_column(Text)
+    original_fields: Mapped[dict[str, str]] = mapped_column(JSONB)
+    normalized_values: Mapped[dict[str, str | None]] = mapped_column(JSONB)
+    issues: Mapped[list[str]] = mapped_column(JSONB)

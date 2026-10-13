@@ -4,68 +4,30 @@ import json
 import os
 import subprocess
 import sys
-from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 from hashlib import sha256
 from pathlib import Path
-from uuid import uuid4
 
 import pandas as pd
 import pytest
-from alembic import command
 from alembic.autogenerate import compare_metadata
-from alembic.config import Config
 from alembic.migration import MigrationContext
 from sqlalchemy import Engine, func, insert, select, text
-from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from indexlens.db.loading import LoadResult, load_source_csv
 from indexlens.db.models import Base, SourceIdentity, SourceRow, SourceVersion
 from indexlens.db.repository import membership_at_db, source_events_db
-from indexlens.db.session import database_engine
 from indexlens.db.verification import verify_source
+from tests.conftest import migrate
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = Path(__file__).parent / "fixtures" / "source_history_synthetic.csv"
 START = date(2026, 1, 1)
 END = date(2026, 1, 31)
 pytestmark = pytest.mark.postgres
-
-
-@pytest.fixture
-def database() -> Iterator[Engine]:
-    url = os.environ.get("INDEXLENS_TEST_DATABASE_URL")
-    if not url:
-        pytest.skip(
-            "Set INDEXLENS_TEST_DATABASE_URL to run PostgreSQL integration tests."
-        )
-    admin = database_engine(url)
-    schema = "indexlens_test_" + uuid4().hex
-    with admin.begin() as connection:
-        connection.execute(text(f'CREATE SCHEMA "{schema}"'))
-    scoped_url = make_url(url).update_query_dict({"options": f"-csearch_path={schema}"})
-    engine = database_engine(scoped_url.render_as_string(hide_password=False))
-    try:
-        migrate(engine, "upgrade", "head")
-        yield engine
-    finally:
-        engine.dispose()
-        with admin.begin() as connection:
-            connection.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
-        admin.dispose()
-
-
-def migrate(engine: Engine, direction: str, revision: str) -> None:
-    config = Config(str(ROOT / "alembic.ini"))
-    with engine.begin() as connection:
-        config.attributes["connection"] = connection
-        if direction == "upgrade":
-            command.upgrade(config, revision)
-        else:
-            command.downgrade(config, revision)
 
 
 def load(
