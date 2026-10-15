@@ -63,6 +63,19 @@ def _number(value: object, field: str) -> tuple[str | None, str | None]:
     return canonical, None
 
 
+def has_invalid_prices(issues: Iterable[str]) -> bool:
+    """Check saved validation issues for invalid prices or impossible ranges."""
+    return any(
+        issue == "invalid_ohlc"
+        or any(
+            issue == f"{prefix}_{field}"
+            for prefix in ("invalid", "nonfinite")
+            for field in VALUE_FIELDS[:4]
+        )
+        for issue in issues
+    )
+
+
 def normalize_price_record(fields: Mapping[str, object]) -> PriceRecord:
     """Accept logical provider/CSV fields; preserve raw evidence in the adapter.
 
@@ -100,15 +113,7 @@ def normalize_price_record(fields: Mapping[str, object]) -> PriceRecord:
         if high < max(opening, low, close) or low > min(opening, high, close):
             issues.append("invalid_ohlc")
             prices_usable = False
-    invalid_prices = any(
-        issue == "invalid_ohlc"
-        or any(
-            issue == f"{prefix}_{field}"
-            for prefix in ("invalid", "nonfinite")
-            for field in VALUE_FIELDS[:4]
-        )
-        for issue in issues
-    )
+    invalid_prices = has_invalid_prices(issues)
     issues.extend(("unresolved_mapping", "unverified_price_basis"))
     return PriceRecord(
         symbol,

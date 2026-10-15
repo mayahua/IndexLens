@@ -1,13 +1,10 @@
 # PostgreSQL source history and price evidence
 
-The database stores audited membership CSVs, source events, and offline price
-evidence. See [price ingestion](prices.md) for migration `0002` and the repeatable
-CSV command. Live Yahoo fetching is documented in the price guide.
-The existing in-memory membership library remains the semantic reference.
+The database stores membership CSV files, their validation results, recorded additions and removals, and saved price data. The [price guide](prices.md) describes the price tables added by migration `0002`, loading prices from CSV, and downloading prices from Yahoo. Tests check that database membership queries match the results from [membership.py](../src/indexlens/membership.py). [Features and momentum ranking](features.md) query reviewed price evidence without adding tables or changing applied migrations.
 
 ## Local setup
 
-Use Python 3.12+ and a running Docker service. From the repository root:
+Use Python 3.12+ and start Docker. Run these commands from the repository root:
 
 ```sh
 python -m pip install -e ".[dev]"
@@ -16,15 +13,11 @@ export INDEXLENS_DATABASE_URL='postgresql+psycopg://indexlens:indexlens_local@12
 python -m alembic upgrade head
 ```
 
-Compose binds PostgreSQL 17 to localhost port 55432. Its displayed password is
-only a local development default. Data lives in the `indexlens_postgres_data`
-Docker volume. `docker compose stop` retains it. These database commands read
-the exported environment variable; they do not automatically read `.env`.
-Change `INDEXLENS_DB_PORT` and the connection URL together if the port is occupied.
+The final command applies migrations: numbered instructions that create or update the database tables. On first setup, these tables contain no membership or price records; load those separately. Later runs apply only migrations that have not already been applied.
 
-## Repeatable sample load
+Compose runs PostgreSQL 17 at `127.0.0.1` (your computer) on port 55432. The database password ('indexlens_local') shown above is only a local development default. Data is saved in `indexlens_postgres_data`, a storage area managed by Docker. `docker compose stop` retains it. These database commands read the exported environment variable; they do not automatically read `.env`. If port 55432 is occupied, export `INDEXLENS_DB_PORT` with a free port number before starting Compose, and change the port in `INDEXLENS_DATABASE_URL` to match.
 
-The repository sample is explicitly synthetic, with dates in 2025–2026:
+## Load and check the sample CSV
 
 ```sh
 python -m indexlens.db load tests/fixtures/source_history_synthetic.csv \
@@ -32,104 +25,70 @@ python -m indexlens.db load tests/fixtures/source_history_synthetic.csv \
   --coverage-start 2026-01-01 --coverage-end 2026-01-31
 ```
 
-The JSON result reports the source version ID, row/event counts and file hash.
-Repeat the command: the version ID is unchanged and `inserted` becomes `false`.
-Use the returned ID for verification, for example:
+The repository sample is explicitly synthetic, with dates in 2025–2026. The coverage start and end dates declare the period supported for membership queries, including both endpoints. The JSON result reports the source version ID, row and event counts and a SHA-256 hash, a value calculated from the file contents to detect changes.
+
+Repeating the same load keeps the version ID and returns `inserted: false`, meaning no new copy was added. Use the returned ID to verify the saved data; replace `1` below with the actual ID:
 
 ```sh
 python -m indexlens.db verify 1
 ```
 
-Verification checks the stored original and audited field dictionaries, record
-hashes, positions, identity links and version counts/types against the saved CSV
-bytes. It compares every stored interval's dates and flags, including intervals
-outside coverage or without events, plus all events and source audit issues.
-It also compares library and database snapshots at both coverage endpoints and
-immediately before/on/after every addition, removal and creation date within
-coverage. Row order, values, types, flags, issues and returned metadata must match.
+Verification compares the saved database records with the saved CSV file. It checks original and validated values, record hashes, positions, links to identities, record counts and data types. It compares every membership interval's dates and flags, including intervals outside coverage or without events, plus all events and file validation findings. It also compares Python and database membership results at both coverage endpoints and around every addition, removal and creation date. These comparisons cover each date and the day before and after it, wherever they fall within coverage. Row order, values, types, flags, issues and returned metadata must match. The checks report errors even with Python’s `-O` (optimization) option, which disables some built-in debugging checks.
 
-These checks raise errors explicitly and stay active under `python -O`.
-The comparison uses the stored CSV as its reference. Source label, real/synthetic
-kind and reviewed coverage remain caller declarations; this check does not
-independently establish their historical accuracy.
+The comparison uses the stored CSV as its reference. The source label, real/synthetic type and coverage dates are supplied when loading the file; verification does not independently confirm their historical accuracy. Load an existing real CSV by supplying its path, a stable source label, `--dataset-kind real` and reviewed coverage date boundaries. The loader processes all records in the supplied CSV file. A successful load does not prove that the file supports membership queries throughout the declared coverage.
 
-Load an existing real CSV by supplying its path, a stable source label,
-`--dataset-kind real` and reviewed coverage boundaries. No sample cap applies.
-Coverage is caller-reviewed, never inferred from a successful database write.
+## Database tables
 
-## Tables and keys
+A version identifies one saved source file. These tables store membership history; see the [price guide](prices.md#tables-and-validation) for price tables. Here, `+` means the listed values together identify one row. Positions are counted from zero.
 
-| Table | One row represents | Key |
+| Table | Each row represents | Row identifier |
 |---|---|---|
-| `source_versions` | A labelled input file and reviewed coverage | `id`; unique source + file hash + real/synthetic kind |
-| `source_identities` | A distinct source `(symbol, cik)` within a version | version + identity position |
-| `source_rows` | An original CSV record | version + zero-based record position |
+| `source_versions` | A labelled input file and its supported query coverage | `id`; the source label + file hash + real/synthetic type |
+| `source_identities` | A distinct source `(symbol, cik)` pair in a version | version + identity position |
+| `source_rows` | An original CSV record | version + record position |
 | `membership_intervals` | Parsed membership dates and flags for that record | version + record position |
-| `source_events` | A nominal ADD or REMOVE from that interval | version + record position + event type |
-| `source_issues` | An ordered source-wide audit finding | version + issue position |
+| `source_events` | An ADD or REMOVE recorded from those dates | version + record position + event type |
+| `source_issues` | A file validation finding, kept in its original order | version + issue position |
 
-Foreign keys include the version, preventing cross-version evidence links.
-Source identities are not verified securities or provider mappings. CIKs remain
-text with leading zeros; distinct symbols sharing a CIK remain separate.
-Repeated/overlapping intervals, approximate dates and equal endpoints are
-retained. They are not uniqueness errors. Equal endpoints never create active
-membership, but can contribute both nominal events.
+Database rules require linked records to belong to the same file version. A stored symbol/CIK pair does not prove which security it represents or which provider symbol matches it. CIK identifiers remain text with leading zeros; different symbols with the same CIK remain separate identities. Repeated/overlapping intervals, approximate dates, and intervals with equal endpoints (start date = end date) are retained. They are not uniqueness errors. Intervals with equal endpoints don't count as active membership, but can contribute both ADD and REMOVE events. Validation rejects exact duplicate CSV rows.
 
-The version stores the exact file bytes, SHA-256, column order and audited frame
-types. Each source row stores original field strings and a separate audited
-representation, where the existing reader's missing markers become null.
-Record SHA-256 hashes canonical JSON of original fields (sorted keys, UTF-8,
-compact separators), not physical CSV lines. Exact byte evidence is in the
-version. Python-returned frames preserve the CSV reader's index positions;
-this adapter accepts CSV files, not arbitrary in-memory DataFrame indices.
+Each version stores an unchanged copy of the original CSV, its SHA-256 hash, column order and validated data types. Each row keeps both its original field strings and the values produced by validation. Recognised missing values are stored as `null` in the validated copy. A row’s SHA-256 hash is calculated from its original fields written as JSON with sorted field names, UTF-8 encoding and no extra spacing. It is not calculated from the CSV line’s formatting. The database loader accepts CSV files. Returned membership rows and event source records preserve the original CSV row positions. The event table has its own row numbering and retains the CSV position in `source_record_position`.
 
-## Query and transaction contract
+## Read membership and save data
 
-`membership_at_db(session, version_id, as_of)` filters intervals in SQL using
-addition <= date, removal > date or null, and creation <= date. Queries outside
-inclusive coverage fail. It returns the existing `MembershipSnapshot` shape,
-including source issues and dated ambiguity warnings. Returned date columns and
-flags come directly from the stored intervals; database reads do not rerun the
-source audit. Both query paths use the same active-identity warning helper.
-`source_events_db(session, version_id)` reads stored nominal events in
-`(coverage_start, coverage_end]`, with complete original evidence. Event order
-matches the library using PostgreSQL's C collation for text sorting. Do not
-derive guarded membership from nominal events alone.
+The query functions below are defined in [repository.py](../src/indexlens/db/repository.py).
 
-Repository callers own their SQLAlchemy session. The loader owns one new session
-and transaction per operation. A failure rolls back the whole version, including
-rows already inserted. A unique version key and PostgreSQL conflict handling
-also prevent duplicates when two loaders run concurrently. Different coverage
-for an existing version is rejected. No mutable session is shared between tasks.
-Treat loaded evidence as immutable; edit the input into a new file version to
-make a correction. Existing versions are not silently rewritten.
+`membership_at_db(session, version_id, as_of)` returns membership on the requested date. A membership period qualifies when:
+
+- The addition date is on or before that date.
+
+- The removal date is after that date, or is missing.
+
+- The record’s creation date (`created_at`) is on or before that date.
+
+The requested date must fall within the saved coverage range, including its start and end dates. Queries outside the coverage range fail. The result uses the existing `MembershipSnapshot` format, including file validation findings and warnings about uncertain membership on the requested date. Returned date columns and flags come directly from saved records; reading the database does not validate the file again. Both the original Python code and the database query use the same function to warn about repeated active symbol/CIK pairs or a symbol with multiple active CIKs.
+
+`source_events_db(session, version_id)` returns recorded ADD and REMOVE events **after** the coverage start date and **on or before** the coverage end date, along with the full validated source table, including records without events. Events keep their recorded dates and approximate-date flags. If a record’s `created_at` is later than an event date, `created_after_event` is true; the event is retained. This flag does not prove when the information became publicly available. Events are sorted by date, symbol, CIK, event type and source row position. Text fields use PostgreSQL’s `C` sorting rule to match the Python code. The order of events on the same date does not establish which happened first. Recorded events alone do not establish active membership; use the membership query to apply all the date rules and receive its warnings.
+
+Code calling these query functions opens and closes its own SQLAlchemy database session, which tracks database operations. The loader opens a new session for each load and saves the whole file as one operation. If a load fails, none of its changes are kept, including rows already inserted. Database rules prevent duplicate versions even when two loads run at the same time. Loading an existing version with different coverage dates is rejected. Sessions must not be shared between tasks. To correct source data, edit the CSV and load it as a new version. Existing versions are preserved.
 
 ## Checks
 
 ```sh
 export INDEXLENS_TEST_DATABASE_URL="$INDEXLENS_DATABASE_URL"
 python -m pytest -q
-python -m ruff check src/indexlens/data_audit.py src/indexlens/membership.py src/indexlens/db src/indexlens/prices tests migrations
-MYPYPATH=src python -m mypy --explicit-package-bases src/indexlens/data_audit.py src/indexlens/membership.py src/indexlens/db src/indexlens/prices tests migrations
+python -m ruff check src/indexlens/data_audit.py src/indexlens/membership.py src/indexlens/db src/indexlens/prices src/indexlens/features tests migrations
+MYPYPATH=src python -m mypy --explicit-package-bases src/indexlens/data_audit.py src/indexlens/membership.py src/indexlens/db src/indexlens/prices src/indexlens/features tests migrations
 ```
 
-PostgreSQL integration tests create and remove their own uniquely named schemas.
-They do not clear application tables. Without the test URL they are explicitly
-skipped; supplying an unreachable URL fails. Ordinary tests make no provider calls.
-The included GitHub workflow runs these checks against a PostgreSQL service.
+Tests that use PostgreSQL create and remove their own uniquely named schemas: separate groups of tables within the database. They do not clear application tables.
 
-Migrations `0001` (source history) and `0002` (price evidence) are explicit and versioned; upgrades do not call `create_all`.
-Tests check migration upgrade/downgrade/re-upgrade, schema/model agreement,
-library parity, repeated/concurrent loads, coverage conflicts, source preservation,
-foreign keys and an actual constraint failure after earlier writes. Regression
-tests deliberately change stored evidence and require verification to fail,
-including through the command-line entry point under Python optimization.
-A query regression test also checks that stored intervals are returned without
-rerunning the audit.
+If `INDEXLENS_TEST_DATABASE_URL` is unset, these tests are reported as skipped. If it points to a database that cannot be reached, the tests fail. Ordinary tests do not make data provider calls. The included GitHub workflow runs these checks against a PostgreSQL service.
 
-The full CSV is deliberately materialized for this small source-history load.
-This is not a streaming or memory-bounded price ingestion pipeline.
+Database table changes are defined in numbered migration files: `0001` for source history and `0002` for price data. Upgrades apply these files instead of using SQLAlchemy’s `create_all` to create tables directly from Python definitions.
 
-Implementation references: [SQLAlchemy transactions](https://docs.sqlalchemy.org/en/20/orm/session_transaction.html),
-[Alembic migrations](https://alembic.sqlalchemy.org/en/latest/tutorial.html),
-[official PostgreSQL image](https://hub.docker.com/_/postgres).
+Tests check that migrations can be applied, reversed and applied again; that database tables match their Python definitions; and that database queries match the original membership code. They also check repeated and simultaneous loads, rejection of conflicting coverage dates, preservation of source data, valid links between records and complete removal of a failed load’s changes. Verification detects deliberately altered stored data, including when run from the command line with Python’s `-O` option. A test also checks that queries use stored intervals without validating the file again.
+
+The membership-history loader reads the entire CSV file into memory, so larger files require more memory. Starting Docker Compose starts the PostgreSQL database; it does not automatically run IndexLens’s tasks.
+
+Implementation references: [SQLAlchemy transactions](https://docs.sqlalchemy.org/en/20/orm/session_transaction.html), [Alembic migrations](https://alembic.sqlalchemy.org/en/latest/tutorial.html), [official PostgreSQL image](https://hub.docker.com/_/postgres).
