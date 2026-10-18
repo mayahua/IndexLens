@@ -1,6 +1,6 @@
 # PostgreSQL source history and price evidence
 
-The database stores membership CSV files, their validation results, recorded additions and removals, and saved price data. The [price guide](prices.md) describes the price tables added by migration `0002`, loading prices from CSV, and downloading prices from Yahoo. Tests check that database membership queries match the results from [membership.py](../src/indexlens/membership.py). [Features and momentum ranking](features.md) query reviewed price evidence without adding tables or changing applied migrations.
+The database stores membership CSV files, their validation results, recorded additions and removals, and saved price data. The [price guide](prices.md) describes the price tables added by migration `0002`, loading prices from CSV, and downloading prices from Yahoo. Tests check that database membership queries match the results from [membership.py](../src/indexlens/membership.py). [Features and momentum ranking](features.md) query reviewed price evidence without adding tables or changing applied migrations. [Monthly removal research](research.md) reuses these sources and saves reproducible experiment reports under `data/`.
 
 ## Local setup
 
@@ -77,8 +77,8 @@ Code calling these query functions opens and closes its own SQLAlchemy database 
 ```sh
 export INDEXLENS_TEST_DATABASE_URL="$INDEXLENS_DATABASE_URL"
 python -m pytest -q
-python -m ruff check src/indexlens/data_audit.py src/indexlens/membership.py src/indexlens/db src/indexlens/prices src/indexlens/features tests migrations
-MYPYPATH=src python -m mypy --explicit-package-bases src/indexlens/data_audit.py src/indexlens/membership.py src/indexlens/db src/indexlens/prices src/indexlens/features tests migrations
+python -m ruff check src/indexlens/data_audit.py src/indexlens/membership.py src/indexlens/db src/indexlens/prices src/indexlens/features src/indexlens/research tests migrations
+MYPYPATH=src python -m mypy --explicit-package-bases src/indexlens/data_audit.py src/indexlens/membership.py src/indexlens/db src/indexlens/prices src/indexlens/features src/indexlens/research tests migrations
 ```
 
 Tests that use PostgreSQL create and remove their own uniquely named schemas: separate groups of tables within the database. They do not clear application tables.

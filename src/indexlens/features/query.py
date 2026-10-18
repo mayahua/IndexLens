@@ -53,9 +53,11 @@ def _observations(
     mapping: dict[str, Any],
     day: date,
     identity_valid: bool,
+    *,
+    history_start: date | None = None,
 ) -> list[Observation]:
     # Limit by chronology, never by numeric or review eligibility.
-    observations = session.scalars(
+    statement = (
         select(PriceObservation)
         .where(
             PriceObservation.dataset_id == review["dataset_id"],
@@ -65,20 +67,46 @@ def _observations(
             PriceObservation.observation_date <= day,
         )
         .order_by(PriceObservation.observation_date.desc())
-        .limit(21)
-    ).all()
+    )
+    if history_start is None:
+        statement = statement.limit(21)
+    else:
+        statement = statement.where(PriceObservation.observation_date >= history_start)
+    observations = session.scalars(statement).all()
     if not observations:
         return []
     evidence_by_observation: dict[int, list[tuple[PriceRow, PriceSource]]] = {
         observation.id: [] for observation in observations
     }
-    evidence_rows = session.execute(
-        select(PriceRow, PriceSource)
-        .join(PriceSource, PriceRow.source_id == PriceSource.id)
-        .where(PriceRow.observation_id.in_(evidence_by_observation))
-        .order_by(PriceRow.observation_id, PriceRow.source_id, PriceRow.record_position)
-    )
-    for row, source in evidence_rows:
+    if history_start is None:
+        evidence_rows = session.execute(
+            select(PriceRow, PriceSource)
+            .join(PriceSource, PriceRow.source_id == PriceSource.id)
+            .where(PriceRow.observation_id.in_(evidence_by_observation))
+            .order_by(
+                PriceRow.observation_id, PriceRow.source_id, PriceRow.record_position
+            )
+        )
+        pairs = [(row, source) for row, source in evidence_rows]
+    else:
+        # Histories reuse each source once, including its potentially large CSV bytes.
+        price_rows = session.scalars(
+            select(PriceRow)
+            .where(PriceRow.observation_id.in_(evidence_by_observation))
+            .order_by(
+                PriceRow.observation_id, PriceRow.source_id, PriceRow.record_position
+            )
+        ).all()
+        sources = {
+            source.id: source
+            for source in session.scalars(
+                select(PriceSource).where(
+                    PriceSource.id.in_({r.source_id for r in price_rows})
+                )
+            )
+        }
+        pairs = [(row, sources[row.source_id]) for row in price_rows]
+    for row, source in pairs:
         if row.observation_id is not None:
             evidence_by_observation[row.observation_id].append((row, source))
     pins = {
@@ -246,4 +274,41 @@ def query_features(
         review=raw,
         membership_context=context,
         results=rows,
+    )
+
+
+def reviewed_history(
+    session: Session,
+    review: Review,
+    mapping: dict[str, Any],
+    start: date,
+    end: date,
+    *,
+    version: SourceVersion | None = None,
+) -> list[Observation]:
+    """Read an inclusive history using the same evidence gates as feature queries.
+
+    Callers select chronological windows and supply the required session to calculate.
+    A membership version already resolved in this session can be reused.
+    """
+    raw = review.declarations
+    dataset = session.get(PriceDataset, raw["dataset_id"])
+    if dataset is None or dataset.data_kind != raw["data_kind"]:
+        raise ValueError("Dataset missing or real/synthetic declaration mismatch.")
+    if version is None:
+        version = _version(session, raw)
+    elif (version.dataset_sha256, version.dataset_kind) != (
+        raw["membership_sha256"], raw["data_kind"]
+    ):
+        raise ValueError("Membership version does not match the review.")
+    return sorted(
+        _observations(
+            session,
+            raw,
+            mapping,
+            end,
+            _identity_valid(session, version, mapping),
+            history_start=start,
+        ),
+        key=lambda row: row.day,
     )

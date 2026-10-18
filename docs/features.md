@@ -1,8 +1,14 @@
 # Numerical features and momentum ranking
 
-IndexLens calculates features using version `observed-20-v2` from stored, reviewed
-prices and ranks the declared universe (the listed securities) by 20-session return.
+A **feature** is a numerical summary of a security's price or volume history.
+IndexLens calculates three: **20-session return** (change in closing price),
+**volatility** (variation in daily returns), and **average volume** (mean trading
+volume).
+
+These calculations use version `observed-20-v2`. IndexLens ranks the declared
+universe (the listed securities) by 20-session return.
 The ranking is descriptive; it does not estimate inclusion or removal probabilities.
+[Monthly removal research](research.md) reuses these features for a separate model comparison.
 Load prices using
 [the price guide](prices.md) and configure PostgreSQL using
 [the database guide](database.md).
@@ -94,9 +100,14 @@ transfer automatically between providers, datasets or date ranges.
 
 The example below uses a fictional security, synthetic data and placeholder
 hashes. It illustrates the format and is **not an approved or runnable manifest**.
-Declare every intended security in `universe`, including unresolved ones. Symbols
-and source identities must be unique within the manifest; ambiguous mappings are
-rejected. All review date bounds are inclusive.
+Declare every intended security in `universe`, including unresolved ones. Source
+identities must be unique within the manifest; ambiguous mappings are rejected.
+All review date bounds are inclusive.
+
+Historical ticker aliases can explicitly share one approved provider history when
+the CIK, source hashes and bounded security review agree. See the
+[research workflow](research.md) for `historical_alias_of` and retained request
+outcomes. Undeclared sharing of a provider ticker remains invalid.
 
 ```json
 {
@@ -179,3 +190,7 @@ across installations. Save the JSON with its review so the results can be reprod
 
 Tests cover the numerical formulas, review checks and command behavior using
 synthetic fixtures and isolated PostgreSQL schemas.
+
+## Feature choices and further work
+
+The three features were chosen for their straightforward formulas and coverage of price movement, variability and trading activity. The removal research workflow uses these features as model inputs. Research results must be interpreted alongside data coverage, sample size and classification performance. Further experiments could compare feature combinations and probability cutoffs; see the research guide's [limitations and further work](research.md#limitations-and-further-work).

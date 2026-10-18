@@ -63,16 +63,16 @@ class Review:
         if not isinstance(universe, list) or not universe:
             raise ValueError("Declare the complete universe.")
         identities: set[tuple[str, str]] = set()
-        symbols: set[str] = set()
+        providers: dict[str, list[dict[str, Any]]] = {}
         for mapping in universe:
             if not isinstance(mapping, dict):
                 raise ValueError("Invalid universe entry.")
             identity = (_text(mapping, "symbol"), _text(mapping, "cik"))
             symbol = _text(mapping, "provider_symbol")
-            if identity in identities or symbol in symbols:
+            if identity in identities:
                 raise ValueError("Ambiguous or duplicate universe mapping.")
             identities.add(identity)
-            symbols.add(symbol)
+            providers.setdefault(symbol, []).append(mapping)
             positions = mapping.get("source_record_positions")
             if (
                 not isinstance(positions, list)
@@ -91,6 +91,36 @@ class Review:
                     raise ValueError("Source pin must be an object.")
                 _hash(source, "source_sha256")
                 _hash(source, "metadata_sha256")
+        for mappings in providers.values():
+            owners = [m for m in mappings if "historical_alias_of" not in m]
+            if len(owners) != 1:
+                raise ValueError("Ambiguous provider history; declare one owner.")
+            owner = owners[0]
+            for mapping in mappings:
+                if mapping is owner:
+                    continue
+                if (
+                    mapping.get("historical_alias_of") != owner["symbol"]
+                    or mapping["cik"] != owner["cik"]
+                    or mapping["status"] != "approved"
+                    or owner["status"] != "approved"
+                    or date.fromisoformat(mapping["start"])
+                    < date.fromisoformat(owner["start"])
+                    or date.fromisoformat(mapping["end"])
+                    > date.fromisoformat(owner["end"])
+                    or {
+                        (p["source_sha256"], p["metadata_sha256"])
+                        for p in mapping["sources"]
+                    }
+                    != {
+                        (p["source_sha256"], p["metadata_sha256"])
+                        for p in owner["sources"]
+                    }
+                ):
+                    raise ValueError(
+                        "Historical alias must share approved identity, dates "
+                        "and source pins."
+                    )
         return cls(json.loads(canonical_json(raw)))
 
     @staticmethod
