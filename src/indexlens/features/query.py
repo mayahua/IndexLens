@@ -23,6 +23,14 @@ from .core import FEATURE_VERSION, Observation, calculate, momentum_order
 from .review import Review, decision_blockers
 
 
+class EvidenceUnavailableError(ValueError):
+    """Stored datasets or source versions do not match the review."""
+
+
+class MembershipContextError(ValueError):
+    """The requested ranking lacks a common observation date."""
+
+
 def _version(session: Session, review: dict[str, Any]) -> SourceVersion:
     versions = session.scalars(
         select(SourceVersion).where(
@@ -31,7 +39,9 @@ def _version(session: Session, review: dict[str, Any]) -> SourceVersion:
         )
     ).all()
     if len(versions) != 1:
-        raise ValueError("Review must identify exactly one membership source version.")
+        raise EvidenceUnavailableError(
+            "Review must identify exactly one membership source version."
+        )
     return versions[0]
 
 
@@ -183,7 +193,9 @@ def query_features(
     raw = review.declarations
     dataset = session.get(PriceDataset, raw["dataset_id"])
     if dataset is None or dataset.data_kind != raw["data_kind"]:
-        raise ValueError("Dataset missing or real/synthetic declaration mismatch.")
+        raise EvidenceUnavailableError(
+            "Dataset missing or real/synthetic declaration mismatch."
+        )
     version = _version(session, raw)
     mappings = raw["universe"]
     results = {}
@@ -227,7 +239,9 @@ def query_features(
     context = None
     if membership:
         if not common:
-            raise ValueError("Membership context requires a common observation date.")
+            raise MembershipContextError(
+                "Membership context requires a common observation date."
+            )
         snapshot = membership_at_db(session, version.id, day)
         active = {
             (str(row.symbol), str(row.cik))
@@ -281,26 +295,29 @@ def reviewed_history(
     session: Session,
     review: Review,
     mapping: dict[str, Any],
-    start: date,
+    start: date | None,
     end: date,
     *,
     version: SourceVersion | None = None,
 ) -> list[Observation]:
     """Read an inclusive history using the same evidence gates as feature queries.
 
+    A null start selects the latest 21 positions ending at or before end.
     Callers select chronological windows and supply the required session to calculate.
     A membership version already resolved in this session can be reused.
     """
     raw = review.declarations
     dataset = session.get(PriceDataset, raw["dataset_id"])
     if dataset is None or dataset.data_kind != raw["data_kind"]:
-        raise ValueError("Dataset missing or real/synthetic declaration mismatch.")
+        raise EvidenceUnavailableError(
+            "Dataset missing or real/synthetic declaration mismatch."
+        )
     if version is None:
         version = _version(session, raw)
     elif (version.dataset_sha256, version.dataset_kind) != (
         raw["membership_sha256"], raw["data_kind"]
     ):
-        raise ValueError("Membership version does not match the review.")
+        raise EvidenceUnavailableError("Membership version does not match the review.")
     return sorted(
         _observations(
             session,
