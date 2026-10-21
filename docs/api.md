@@ -1,10 +1,10 @@
-# Public read API
+# Public API
 
 The API reads membership, events and prices from PostgreSQL, calculates the existing
 `observed-20-v2` features, and serves saved removal research results. Responses retain
 real/synthetic labels, supported dates, source hashes and unavailable-value reasons.
 
-An **endpoint** is an API operation identified by its HTTP method and URL path, such as `GET /api/v1/indices`. All IndexLens endpoints use `GET` to retrieve data and have the `/api/v1` prefix. A **route** connects an endpoint to the Python function that handles its requests.
+An **endpoint** is an API operation identified by its HTTP method and URL path, such as `GET /api/v1/indices`. Data endpoints use `GET`; the explanation endpoint uses `POST`. All have the `/api/v1` prefix. A **route** connects an endpoint to the Python function that handles its requests.
 
 Swagger UI provides interactive documentation at `/docs`. Its OpenAPI schema, the machine-readable description of the endpoints and their parameters, is at `/openapi.json`.
 
@@ -57,7 +57,7 @@ identities. Callers send discovered identifiers, never filesystem paths.
 
 ## Endpoints
 
-The table lists all 13 IndexLens endpoints. Linked descriptions lead to their request examples below. Swagger UI and the OpenAPI schema are supporting documentation URLs outside this table.
+The table lists all 14 IndexLens endpoints. Linked descriptions lead to their request examples below. Swagger UI and the OpenAPI schema are supporting documentation URLs outside this table.
 
 | Endpoint | Purpose and example |
 |---|---|
@@ -74,10 +74,11 @@ The table lists all 13 IndexLens endpoints. Linked descriptions lead to their re
 | `GET /api/v1/rankings` | [Rank a review's universe by past returns](#momentum-rankings) |
 | `GET /api/v1/research/runs/{run_id}` | [Retrieve a saved research summary](#saved-research-summary) |
 | `GET /api/v1/research/runs/{run_id}/records` | [Retrieve a page of saved research records](#saved-research-records) |
+| `POST /api/v1/research/explain` | [Explain event, ranking or saved-run evidence](explanations.md) |
 
 Braced names such as `{index_id}` are **path parameters**: replace them with discovered identifiers. Values after `?`, separated by `&`, are **query parameters**, such as `as_of=2026-01-07` or `limit=100`. Changing these values supplies different inputs to the same endpoint.
 
-Each `curl` command sends a GET request and prints the API's JSON response. The identifiers and dates in the examples are illustrative synthetic values. Discover published IDs from the API and substitute dates supported by their sources.
+Each `curl` command below sends a GET request and prints the API's JSON response. The identifiers and dates in the examples are illustrative synthetic values. Discover published IDs from the API and substitute dates supported by their sources.
 
 ## Health
 
@@ -91,7 +92,7 @@ The `-i` option also prints the HTTP status and response headers. Success return
 
 ## Identifier discovery
 
-See the [complete table of 13 endpoints](#endpoints) for paths and purposes.
+See the [complete table of 14 endpoints](#endpoints) for paths and purposes.
 
 A security identifier has the form `v<source_version_id>-s<identity_position>`, for
 example `v1-s0`. It identifies a stored `(symbol, cik)` pair **within one source
@@ -135,7 +136,7 @@ curl 'http://127.0.0.1:8000/api/v1/research/runs'
 
 ## Data queries
 
-See the [complete table of 13 endpoints](#endpoints) for paths and purposes.
+See the [complete table of 14 endpoints](#endpoints) for paths and purposes.
 
 These eight endpoints retrieve or calculate results using discovered identifiers. Each example is followed by the rules governing its response. The identifiers and dates remain illustrative; use values supported by the selected sources.
 
@@ -285,7 +286,8 @@ also identify the affected fields. Database credentials and SQL details are omit
 Routes validate HTTP inputs, services apply query/identity contracts, and repositories
 read existing database evidence or configured saved files. Feature calculations reuse
 the existing bounded 20-session implementation. Synchronous data handlers run in
-FastAPI's worker threads. Research training, ingestion and provider requests are
-separate commands. See [FastAPI concurrency](https://fastapi.tiangolo.com/async/).
+FastAPI's worker threads. Research training and ingestion remain separate commands. The
+[explanation endpoint](explanations.md) calls OpenAI after retrieving its evidence;
+GET endpoints remain usable when OpenAI is unavailable. See [FastAPI concurrency](https://fastapi.tiangolo.com/async/).
 The API binds locally in the startup example; hosting and access control require
 separate deployment configuration.

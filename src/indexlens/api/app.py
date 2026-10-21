@@ -12,11 +12,21 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from indexlens.db.session import database_engine
 from indexlens.features.query import EvidenceUnavailableError
 
+from . import openai_provider
+from .explanation import (
+    ExplainRequest,
+    ExplanationResult,
+    RunTarget,
+    build_evidence,
+    check_question,
+)
 from .repository import Repository, read_json
+from .request_limits import ExplainBodyLimit
 from .schemas import Day, Identifier, Limit, Offset, Page, Result, SecurityId, Settings
 from .service import ApiError, Catalog, SavedResearch, Sections, Service, bounded
 
@@ -45,6 +55,7 @@ def create_app(
                 db.dispose()
 
     app = FastAPI(title="IndexLens API", version="1.0", lifespan=lifespan)
+    app.add_middleware(ExplainBodyLimit)
 
     @contextmanager
     def access() -> Generator[Service, None, None]:
@@ -178,6 +189,19 @@ def create_app(
     @app.get("/api/v1/research/runs", response_model=Page)
     def runs(limit: Limit = 100, offset: Offset = 0) -> dict[str, Any]:
         return bounded(research.runs(limit, offset))
+
+    def explanation_evidence(payload: ExplainRequest) -> dict[str, Any]:
+        if isinstance(payload.target, RunTarget):
+            return build_evidence(payload, research)
+        with access() as service:
+            return build_evidence(payload, research, service)
+
+    @app.post("/api/v1/research/explain", response_model=ExplanationResult)
+    async def explain(payload: ExplainRequest) -> dict[str, Any]:
+        check_question(payload)
+        evidence = await run_in_threadpool(explanation_evidence, payload)
+        # Release the read transaction before waiting for the remote provider.
+        return bounded(await openai_provider.explain(payload, evidence))
 
     @app.get("/api/v1/research/runs/{run_id}", response_model=Result)
     def run(run_id: Identifier) -> dict[str, Any]:
