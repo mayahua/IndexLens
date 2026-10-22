@@ -25,6 +25,7 @@ from .explanation import (
     build_evidence,
     check_question,
 )
+from .logging import request_summary
 from .repository import Repository, read_json
 from .request_limits import ExplainBodyLimit
 from .schemas import Day, Identifier, Limit, Offset, Page, Result, SecurityId, Settings
@@ -56,6 +57,7 @@ def create_app(
 
     app = FastAPI(title="IndexLens API", version="1.0", lifespan=lifespan)
     app.add_middleware(ExplainBodyLimit)
+    app.middleware("http")(request_summary)
 
     @contextmanager
     def access() -> Generator[Service, None, None]:

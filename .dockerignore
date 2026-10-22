@@ -1,0 +1,16 @@
+# Allow only application source and public delivery inputs into the build context.
+**
+!Dockerfile
+!requirements.lock
+!pyproject.toml
+!alembic.ini
+!src/
+!src/indexlens/
+!src/indexlens/**
+!migrations/
+!migrations/**
+!scripts/
+!scripts/*.py
+**/__pycache__/
+**/*.pyc
+**/.DS_Store

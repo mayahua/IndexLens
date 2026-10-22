@@ -2,13 +2,15 @@
 
 The database stores membership CSV files, their validation results, recorded additions and removals, and saved price data. The [price guide](prices.md) describes the price tables added by migration `0002`, loading prices from CSV, and downloading prices from Yahoo. Tests check that database membership queries match the results from [membership.py](../src/indexlens/membership.py). [Features and momentum ranking](features.md) query reviewed price evidence without adding tables or changing applied migrations. [Monthly removal research](research.md) reuses these sources and saves reproducible experiment reports under `data/`. The [public API](api.md) exposes these results through validated read-only requests.
 
+For the complete API/container sample, follow [reproducible delivery](delivery.md).
+
 ## Local setup
 
 Use Python 3.12+ and start Docker. Run these commands from the repository root:
 
 ```sh
 python -m pip install -e ".[dev]"
-docker compose up -d --wait
+docker compose up -d --wait db
 export INDEXLENS_DATABASE_URL='postgresql+psycopg://indexlens:indexlens_local@127.0.0.1:55432/indexlens'
 python -m alembic upgrade head
 ```
@@ -89,6 +91,6 @@ Database table changes are defined in numbered migration files: `0001` for sourc
 
 Tests check that migrations can be applied, reversed and applied again; that database tables match their Python definitions; and that database queries match the original membership code. They also check repeated and simultaneous loads, rejection of conflicting coverage dates, preservation of source data, valid links between records and complete removal of a failed load’s changes. Verification detects deliberately altered stored data, including when run from the command line with Python’s `-O` option. A test also checks that queries use stored intervals without validating the file again.
 
-The membership-history loader reads the entire CSV file into memory, so larger files require more memory. Starting Docker Compose starts the PostgreSQL database; it does not automatically run IndexLens’s tasks.
+The membership-history loader reads the entire CSV file into memory, so larger files require more memory. The database-only command above starts PostgreSQL. The complete delivery workflow runs migrations, sample loading and API startup as separate steps.
 
 Implementation references: [SQLAlchemy transactions](https://docs.sqlalchemy.org/en/20/orm/session_transaction.html), [Alembic migrations](https://alembic.sqlalchemy.org/en/latest/tutorial.html), [official PostgreSQL image](https://hub.docker.com/_/postgres).

@@ -14,7 +14,7 @@ import getpass
 import os
 import uvicorn
 os.environ['OPENAI_API_KEY'] = getpass.getpass('OpenAI API key: ')
-uvicorn.run('indexlens.api.app:create_app', factory=True, host='127.0.0.1', port=8000)
+uvicorn.run('indexlens.api.app:create_app', factory=True, host='127.0.0.1', port=8000, access_log=False)
 PY
 ```
 

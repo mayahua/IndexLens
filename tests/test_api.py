@@ -570,5 +570,9 @@ def test_unexpected_value_error_is_not_reclassified(
         raise ValueError("Unexpected conversion failure")
 
     monkeypatch.setattr("indexlens.api.service.Service.indices", fail)
-    with pytest.raises(ValueError, match="Unexpected conversion failure"):
-        client.get(PREFIX + "/indices")
+    response = client.get(PREFIX + "/indices")
+    assert response.status_code == 500
+    assert response.json() == {
+        "error": {"code": "internal_error", "message": "Request failed."}
+    }
+    assert "Unexpected conversion failure" not in response.text

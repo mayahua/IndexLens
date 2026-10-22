@@ -8,6 +8,8 @@ An **endpoint** is an API operation identified by its HTTP method and URL path, 
 
 Swagger UI provides interactive documentation at `/docs`. Its OpenAPI schema, the machine-readable description of the endpoints and their parameters, is at `/openapi.json`.
 
+A complete portable synthetic workflow is available in [reproducible delivery](delivery.md).
+
 ## Start locally
 
 Follow [database setup](database.md), install `.[dev]`, apply the existing migrations,
@@ -31,7 +33,7 @@ version. Empty `reviews` and `runs` allow membership-only use.
 
 ```sh
 export INDEXLENS_API_CONFIG='path/to/api.json'
-python -m uvicorn indexlens.api.app:create_app --factory --host 127.0.0.1 --port 8000
+python -m uvicorn indexlens.api.app:create_app --factory --host 127.0.0.1 --port 8000 --no-access-log
 ```
 
 Settings use exported environment variables. The application does not load `.env`.

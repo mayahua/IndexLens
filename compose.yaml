@@ -1,4 +1,17 @@
 name: indexlens
+
+x-application: &application
+  image: ${COMPOSE_PROJECT_NAME:-indexlens}-app:local
+  build: .
+  environment:
+    INDEXLENS_DATABASE_URL: postgresql+psycopg://indexlens:indexlens_local@db:5432/indexlens?connect_timeout=5
+    INDEXLENS_API_CONFIG: ${INDEXLENS_CONTAINER_API_CONFIG:-/app/data/sample/api.json}
+    # The reproducible local sample never inherits a host OpenAI credential.
+    OPENAI_API_KEY: ""
+  volumes:
+    - sample_data:/app/data
+  init: true
+
 services:
   db:
     image: postgres:17
@@ -15,5 +28,27 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+  migrate:
+    <<: *application
+    command: ["python", "-m", "alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+  api:
+    <<: *application
+    ports:
+      - "127.0.0.1:${INDEXLENS_API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/api/v1/health', timeout=5).close()"]
+      interval: 5s
+      timeout: 6s
+      retries: 12
+      start_period: 10s
 volumes:
   postgres_data:
+  sample_data:

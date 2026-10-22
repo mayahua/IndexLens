@@ -1,6 +1,6 @@
 # Price ingestion — Yahoo and offline CSV
 
-IndexLens downloads daily prices from Yahoo through yfinance or loads saved CSV files. Both routes convert values to a shared format, validate them and preserve the original inputs in PostgreSQL. Downloads can resume using saved responses. See [database setup](database.md) for installation and [features and momentum ranking](features.md) for calculations using reviewed prices.
+IndexLens downloads daily prices from Yahoo through yfinance or loads saved CSV files. Both routes convert values to a shared format, validate them and preserve the original inputs in PostgreSQL. Downloads can resume using saved responses. See [database setup](database.md) for installation and [features and momentum ranking](features.md) for calculations using reviewed prices. A complete portable synthetic workflow is available in [reproducible delivery](delivery.md).
 
 ## Yahoo demo command
 
