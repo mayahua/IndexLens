@@ -5,7 +5,6 @@ import gzip
 import importlib.metadata
 import json
 import platform
-import subprocess
 import sys
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -16,38 +15,18 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from indexlens.db.session import database_engine
+from indexlens.features.context_review import BenchmarkReview
 from indexlens.features.review import Review
 from indexlens.prices.metadata import canonical_json, fingerprint
 
+from .model import DEFAULT_CUTOFF, validate_cutoff
+from .provenance import code_state
 from .workflow import run_research
 
 
-def code_state(root: Path) -> dict[str, Any]:
-    def git(*args: str) -> str:
-        return subprocess.check_output(
-            ["git", "-C", str(root), *args], text=True, stderr=subprocess.DEVNULL
-        ).strip()
-
-    files = sorted((root / "src" / "indexlens").rglob("*.py"))
-    files += [root / "pyproject.toml"]
-    result: dict[str, Any] = dict(
-        file_sha256={
-            str(p.relative_to(root)): sha256(p.read_bytes()).hexdigest() for p in files
-        },
-    )
-    try:
-        status = git("status", "--porcelain=v1", "--untracked-files=all")
-        result.update(
-            revision=git("rev-parse", "HEAD"),
-            working_tree_status=status,
-            dirty=bool(status),
-        )
-    except (OSError, subprocess.CalledProcessError):
-        result.update(revision=None, working_tree_status=None, dirty=None)
-    return result
-
-
-def execute(config_path: Path, output: Path) -> dict[str, Any]:
+def execute(
+    config_path: Path, output: Path, cutoff: float | None = None
+) -> dict[str, Any]:
     root = Path.cwd().resolve()
     if not output.resolve().is_relative_to(root / "data"):
         raise ValueError("Generated research outputs must be under data/.")
@@ -56,14 +35,31 @@ def execute(config_path: Path, output: Path) -> dict[str, Any]:
     config_bytes = config_path.read_bytes()
     config = json.loads(config_bytes)
     if (
-        config.get("config_version") != "removal-run-v1"
+        not isinstance(config, dict)
+        or config.get("config_version")
+        not in ("removal-run-v1", "removal-run-v2", "removal-nine-run-v1")
         or type(config.get("seed")) is not int
     ):
         raise ValueError("A versioned configuration and integer seed are required.")
+    if "cutoff" in config:
+        validate_cutoff(config["cutoff"])
+    cutoff = validate_cutoff(
+        config.get("cutoff", DEFAULT_CUTOFF) if cutoff is None else cutoff
+    )
+    nine = config["config_version"] == "removal-nine-run-v1"
+    if nine and config["seed"] != 42:
+        raise ValueError("The versioned nine-feature specification uses seed 42.")
+    config = config | dict(
+        config_version="removal-nine-run-v1" if nine else "removal-run-v2",
+        cutoff=cutoff,
+    )
     inputs = {}
     payloads = {}
     input_bytes = {}
-    for key in ("manifest", "review", "ingestion_report"):
+    keys = ("manifest", "review", "ingestion_report") + (
+        ("benchmark_review",) if nine else ()
+    )
+    for key in keys:
         path = Path(config[key])
         content = path.read_bytes()
         inputs[key] = dict(path=str(path), sha256=sha256(content).hexdigest())
@@ -83,6 +79,9 @@ def execute(config_path: Path, output: Path) -> dict[str, Any]:
     if ingestion.get("manifest_sha256") != fingerprint(payloads["manifest"]):
         raise ValueError("Ingestion must pin the supplied population manifest content.")
     review = Review.from_dict(payloads["review"])
+    benchmark = (
+        BenchmarkReview.from_dict(payloads["benchmark_review"]) if nine else None
+    )
     before = code_state(root)
     engine = database_engine()
     try:
@@ -94,7 +93,13 @@ def execute(config_path: Path, output: Path) -> dict[str, Any]:
             session.begin(),
         ):
             rows, report = run_research(
-                session, payloads["manifest"], review, ingestion, config["seed"]
+                session,
+                payloads["manifest"],
+                review,
+                ingestion,
+                config["seed"],
+                cutoff,
+                **({"benchmark": benchmark} if benchmark is not None else {}),
             )
     finally:
         engine.dispose()
@@ -141,7 +146,8 @@ def execute(config_path: Path, output: Path) -> dict[str, Any]:
     )
     for key, content in input_bytes.items():
         (output / f"{key}.json").write_bytes(content)
-    (output / "config.json").write_bytes(config_bytes)
+    (output / "config.input.json").write_bytes(config_bytes)
+    (output / "config.json").write_text(json.dumps(config, indent=2) + "\n")
     (output / "report.json").write_text(
         json.dumps(report, indent=2, allow_nan=False) + "\n"
     )
@@ -149,12 +155,21 @@ def execute(config_path: Path, output: Path) -> dict[str, Any]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] == "evaluate-cutoffs":
+        from .cutoffs import main as cutoffs_main
+
+        return cutoffs_main(argv[1:])
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        epilog="Use evaluate-cutoffs --help to evaluate saved probabilities.",
+    )
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--cutoff", type=float, help="Override configuration cutoff.")
     args = parser.parse_args(argv)
     try:
-        report = execute(args.config, args.output)
+        report = execute(args.config, args.output, args.cutoff)
     except SQLAlchemyError as exc:
         print(
             f"Research failed: database operation failed ({type(exc).__name__}). "

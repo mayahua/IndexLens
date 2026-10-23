@@ -65,6 +65,7 @@ def _observations(
     identity_valid: bool,
     *,
     history_start: date | None = None,
+    observation_limit: int = 21,
 ) -> list[Observation]:
     # Limit by chronology, never by numeric or review eligibility.
     statement = (
@@ -79,7 +80,7 @@ def _observations(
         .order_by(PriceObservation.observation_date.desc())
     )
     if history_start is None:
-        statement = statement.limit(21)
+        statement = statement.limit(observation_limit)
     else:
         statement = statement.where(PriceObservation.observation_date >= history_start)
     observations = session.scalars(statement).all()
@@ -299,14 +300,17 @@ def reviewed_history(
     end: date,
     *,
     version: SourceVersion | None = None,
+    observation_limit: int = 21,
 ) -> list[Observation]:
     """Read an inclusive history using the same evidence gates as feature queries.
 
-    A null start selects the latest 21 positions ending at or before end.
+    A null start selects at most observation_limit positions, defaulting to 21.
     Callers select chronological windows and supply the required session to calculate.
     A membership version already resolved in this session can be reused.
     """
     raw = review.declarations
+    if not 1 <= observation_limit <= 121:
+        raise ValueError("Observation limit must be between 1 and 121.")
     dataset = session.get(PriceDataset, raw["dataset_id"])
     if dataset is None or dataset.data_kind != raw["data_kind"]:
         raise EvidenceUnavailableError(
@@ -315,7 +319,8 @@ def reviewed_history(
     if version is None:
         version = _version(session, raw)
     elif (version.dataset_sha256, version.dataset_kind) != (
-        raw["membership_sha256"], raw["data_kind"]
+        raw["membership_sha256"],
+        raw["data_kind"],
     ):
         raise EvidenceUnavailableError("Membership version does not match the review.")
     return sorted(
@@ -326,6 +331,7 @@ def reviewed_history(
             end,
             _identity_valid(session, version, mapping),
             history_start=start,
+            observation_limit=observation_limit,
         ),
         key=lambda row: row.day,
     )

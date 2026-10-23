@@ -6,9 +6,17 @@ from pathlib import Path
 from typing import Any, Literal
 
 from indexlens.db.models import SourceIdentity, SourceVersion
+from indexlens.features.context_review import (
+    BenchmarkReview,
+    benchmark_history,
+    context_policy,
+    reviewed_context,
+)
 from indexlens.features.core import FEATURE_VERSION, calculate
 from indexlens.features.query import MembershipContextError
 from indexlens.features.review import Review
+from indexlens.prices.metadata import fingerprint
+from indexlens.research.model import NINE_RESEARCH_VERSION
 
 from .repository import Repository, issues, read_json
 from .schemas import SavedRun, SecurityId, Settings
@@ -107,11 +115,17 @@ class Catalog:
     def __init__(self, settings: Settings, base: Path):
         self.settings = settings
         self.reviews: dict[str, Review] = {}
+        self.benchmarks: dict[str, BenchmarkReview] = {}
+        for key, filename in settings.benchmarks.items():
+            self.benchmarks[key] = BenchmarkReview.from_dict(
+                read_json(base / filename)[0]
+            )
         self.runs: dict[str, dict[str, Any]] = {}
         self.run_hashes: dict[str, str] = {}
         for key, filename in settings.reviews.items():
             raw, _ = read_json(base / filename)
             review = Review.from_dict(raw)
+            context_policy(raw)
             if len(raw["universe"]) > 1000:
                 raise ValueError("An API review supports at most 1000 identities.")
             self.reviews[key] = review
@@ -415,6 +429,87 @@ class Service:
             ),
         )
 
+    def financial_context(
+        self,
+        security_id: str,
+        review_id: str,
+        day: date,
+        benchmark_id: str | None = None,
+    ) -> dict[str, Any]:
+        review, version, mapping = self.mapped(security_id, review_id)
+        history = self.repo.history(
+            self.repo.session,
+            review,
+            mapping,
+            None,
+            day,
+            version=version,
+            observation_limit=121,
+        )
+        policy = context_policy(review.declarations)
+        benchmark = None
+        market = []
+        if benchmark_id is not None:
+            benchmark = self.catalog.benchmarks.get(benchmark_id)
+            if benchmark is None:
+                raise ApiError(404, "unknown_benchmark", "Unknown benchmark review.")
+            if benchmark.declarations["data_kind"] != review.declarations["data_kind"]:
+                raise ApiError(
+                    422, "data_kind_mismatch", "Benchmark data kind differs."
+                )
+            market = benchmark_history(self.repo.session, benchmark, day)
+        liquidity = policy.get("dollar_volume_review")
+        result = reviewed_context(history, market, day, review, benchmark)
+        result.update(
+            security_id=security_id,
+            symbol=mapping["symbol"],
+            cik=mapping["cik"],
+            research_input_sha256=result["input_sha256"],
+        )
+        result["inputs"] = {k: public_inputs(v) for k, v in result["inputs"].items()}
+        result["input_sha256"] = fingerprint(result["inputs"])
+        benchmark_metadata = None
+        if benchmark is not None:
+            raw = benchmark.declarations
+            benchmark_metadata = {
+                k: raw[k]
+                for k in (
+                    "dataset_id",
+                    "data_kind",
+                    "provider",
+                    "price_basis",
+                    "adjustment_settings",
+                    "currency",
+                    "return_convention",
+                    "limitations",
+                )
+            }
+            benchmark_metadata.update(
+                benchmark_id=benchmark_id,
+                review_sha256=benchmark.sha256,
+                identity=decision(raw["benchmark"])
+                | {
+                    k: raw["benchmark"][k]
+                    for k in ("provider_symbol", "instrument_type")
+                },
+                basis_review=decision(raw["basis_review"]),
+            )
+        return dict(
+            result=result,
+            metadata=self.review_metadata(review_id, review, version)
+            | dict(
+                reference_date=str(day),
+                provider_symbol=mapping["provider_symbol"],
+                mapping=decision(mapping),
+                source_record_positions=mapping["source_record_positions"],
+                financial_context_policy={
+                    k: v for k, v in policy.items() if k != "dollar_volume_review"
+                },
+                dollar_volume_review=decision(liquidity) if liquidity else None,
+                benchmark=benchmark_metadata,
+            ),
+        )
+
     def rankings(
         self, review_id: str, day: date, membership: bool, limit: int, offset: int
     ) -> dict[str, Any]:
@@ -527,6 +622,7 @@ class SavedResearch:
         return dict(
             run_id=run_id,
             report_sha256=self.catalog.run_hashes[run_id],
+            threshold=raw["evaluation"].get("threshold"),
             **{
                 k: raw[k]
                 for k in (
@@ -574,6 +670,12 @@ class SavedResearch:
         result["evaluation"] = {
             k: v for k, v in raw["evaluation"].items() if k != "predictions"
         }
+        if raw["research_version"] == NINE_RESEARCH_VERSION:
+            result["model_labels"] = dict(
+                baseline="Constant-probability baseline",
+                matched_three="Three-feature logistic regression",
+                logistic="Nine-feature logistic regression",
+            )
         result["summaries"] = {
             split: {
                 k: v

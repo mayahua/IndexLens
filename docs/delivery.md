@@ -2,7 +2,9 @@
 
 The public synthetic workflow loads invented membership and prices, calculates
 short-window features and synthetic removal research results, and serves them
-through the API.
+through the API. It is an integration smoke sample, **not a reproduction of the
+nine-feature historical research fit**, which requires reviewed stock and S&P 500
+benchmark histories. See the [research guide](research.md) for that workflow.
 The sample requires Docker with Compose v2 or later. Run commands from the repository root.
 Installation downloads public images and packages; sample execution uses local
 fixtures and PostgreSQL. No private configuration, market download or OpenAI key is
@@ -85,7 +87,8 @@ curl -i 'http://127.0.0.1:18000/api/v1/research/explain' \
 
 Compose explicitly supplies an empty OpenAI key, including when the host has one.
 The last request returns `503 openai_not_configured`; data requests remain available.
-`scripts/smoke.py` exercises the original thirteen GET routes, valid empty results, invalid dates/ranges and unknown
+`scripts/smoke.py` exercises the original thirteen GET routes (not the
+financial-context GET), valid empty results, invalid dates/ranges and unknown
 IDs, an unsupported question, and the missing-key response.
 Live OpenAI configuration is a separate workflow in [explanations.md](explanations.md).
 

@@ -251,12 +251,16 @@ def test_insufficient_classes(case: str, reason: str) -> None:
 
 
 def test_metrics_undefined_and_fixed_threshold() -> None:
-    values = metrics([0, 0, 1], [0.1, 0.1, 0.1])
+    values = metrics([0, 0, 1], [0.01, 0.01, 0.01])
     assert values["precision"] is None and values["recall"] == 0 and values["f1"] == 0
     assert values["average_precision"] == pytest.approx(1 / 3)
-    assert values["brier_score"] == pytest.approx(0.83 / 3)
+    assert values["brier_score"] == pytest.approx(0.9803 / 3)
     assert values["confusion_matrix"] == [[2, 0], [1, 0]]
-    assert metrics([1], [0.5])["confusion_matrix"] == [[0, 0], [0, 1]]
+    boundary = metrics([0, 1, 0], [0.049, 0.05, 0.051])
+    assert boundary["threshold"] == 0.05
+    assert boundary["confusion_matrix"] == [[1, 1], [0, 1]]
+    assert boundary["precision"] == 0.5 and boundary["recall"] == 1
+    assert boundary["f1"] == pytest.approx(2 / 3)
     assert metrics([0], [0.1])["average_precision"] is None
     assert metrics([], [])["brier_score"] is None
     rows = model_rows()
@@ -277,7 +281,6 @@ def test_repeated_monthly_positive_is_one_distinct_removal() -> None:
     summary = counts(rows, "label_after_source_screen")
     assert summary["positive_observations"] == 2
     assert summary["distinct_removal_events"] == 1
-
 
 
 @pytest.mark.parametrize(
@@ -302,7 +305,9 @@ def test_cli_reports_failure_causes(
     error: Exception,
     explanation: str,
 ) -> None:
-    def fail(_config: Path, _output: Path) -> dict[str, Any]:
+    def fail(
+        _config: Path, _output: Path, cutoff: float | None = None
+    ) -> dict[str, Any]:
         raise error
 
     monkeypatch.setattr("indexlens.research.__main__.execute", fail)

@@ -1,8 +1,9 @@
 # Public API
 
-The API reads membership, events and prices from PostgreSQL, calculates the existing
-`observed-20-v2` features, and serves saved removal research results. Responses retain
-real/synthetic labels, supported dates, source hashes and unavailable-value reasons.
+The API reads membership, events and prices from PostgreSQL, calculates dated price
+and benchmark financial context, and serves saved nine-feature removal research.
+The independent `observed-20-v2` feature endpoint supports momentum rankings.
+Responses retain real/synthetic labels, supported dates, source hashes and unavailable-value reasons.
 
 An **endpoint** is an API operation identified by its HTTP method and URL path, such as `GET /api/v1/indices`. Data endpoints use `GET`; the explanation endpoint uses `POST`. All have the `/api/v1` prefix. A **route** connects an endpoint to the Python function that handles its requests.
 
@@ -46,20 +47,23 @@ reviewed prices/features and a saved research run, add entries such as:
     "sample": {"version_id": 1, "label": "Synthetic example"}
   },
   "reviews": {"sample-review": "review.json"},
+  "benchmarks": {"sp500": "benchmark-review.json"},
   "runs": {"experiment-001": "experiment-001/report.json"}
 }
 ```
 
-Supply a valid [feature review](features.md#review-manifest) and an existing report
-produced by the [research command](research.md). These are format examples, not
-runnable reviews or fitted experiments. Reports and reviews are read and validated
+Supply a valid [feature review](features.md#review-manifest), a separately reviewed
+[benchmark](#financial-context), and an existing nine-feature report produced by
+the [research command](research.md). These are format examples, not runnable
+reviews or fitted experiments. Reports and reviews are read and validated
 at application creation; restart to publish changed files. Each file is limited
-to 64 MiB, and each catalogue to 100 entries. A review supports up to 1,000 declared
+to 64 MiB. The `indices`, `reviews` and `runs` catalogues allow up to 100 entries
+each; `benchmarks` allows up to 10. A review supports up to 1,000 declared
 identities. Callers send discovered identifiers, never filesystem paths.
 
 ## Endpoints
 
-The table lists all 14 IndexLens endpoints. Linked descriptions lead to their request examples below. Swagger UI and the OpenAPI schema are supporting documentation URLs outside this table.
+The table lists all 15 IndexLens endpoints. Linked descriptions lead to their request examples below. Swagger UI and the OpenAPI schema are supporting documentation URLs outside this table.
 
 | Endpoint | Purpose and example |
 |---|---|
@@ -73,8 +77,9 @@ The table lists all 14 IndexLens endpoints. Linked descriptions lead to their re
 | `GET /api/v1/indices/{index_id}/events` | [Retrieve ADD and REMOVE events in a date range](#events-in-a-date-range) |
 | `GET /api/v1/securities/{security_id}/prices` | [Retrieve observed prices using a selected review](#prices-in-a-date-range) |
 | `GET /api/v1/securities/{security_id}/features` | [Calculate existing features on a reference date](#features-on-a-reference-date) |
+| `GET /api/v1/securities/{security_id}/financial-context` | [Dated descriptive financial indicators and benchmark evidence](#financial-context) |
 | `GET /api/v1/rankings` | [Rank a review's universe by past returns](#momentum-rankings) |
-| `GET /api/v1/research/runs/{run_id}` | [Retrieve a saved research summary](#saved-research-summary) |
+| `GET /api/v1/research/runs/{run_id}` | [Retrieve three-way model metrics and the selected cutoff](#saved-research-summary) |
 | `GET /api/v1/research/runs/{run_id}/records` | [Retrieve a page of saved research records](#saved-research-records) |
 | `POST /api/v1/research/explain` | [Explain event, ranking or saved-run evidence](explanations.md) |
 
@@ -94,7 +99,7 @@ The `-i` option also prints the HTTP status and response headers. Success return
 
 ## Identifier discovery
 
-See the [complete table of 14 endpoints](#endpoints) for paths and purposes.
+See the [complete table of 15 endpoints](#endpoints) for paths and purposes.
 
 A security identifier has the form `v<source_version_id>-s<identity_position>`, for
 example `v1-s0`. It identifies a stored `(symbol, cik)` pair **within one source
@@ -136,9 +141,22 @@ List run IDs for saved research requests:
 curl 'http://127.0.0.1:8000/api/v1/research/runs'
 ```
 
+Each run ID selects one saved report. The listing provides IDs, report hashes and each saved `threshold`, so a cutoff can be selected before opening a summary. The same value appears in summary metadata and `result.evaluation.threshold`. Publish separate cutoff comparisons under separate configured run IDs. There is no threshold query parameter. Restart the API after changing the configuration or report files; removed IDs then return `404`.
+
+For reports created by [saved cutoff evaluation](research.md#evaluate-cutoffs-from-a-saved-report), add entries to the API configuration's `runs` object. If `api.json` is in `data/research/`, the synthetic usage example above can be registered as:
+
+```json
+{
+  "experiment-001": "experiment-001/report.json",
+  "experiment-001-cutoff-0p002": "experiment-001-cutoffs/cutoff_0p002.json"
+}
+```
+
+Merge these entries into `runs`, retaining other published IDs. Paths resolve relative to the API configuration file. Restart the process with that configuration, rediscover the IDs, and select `experiment-001-cutoff-0p002` for its summary or explanation. A running process retains its loaded snapshot until restart; unknown or removed IDs return `404`. Registration does not change report contents. Discovery and summaries reuse saved results and make no model fit or OpenAI request.
+
 ## Data queries
 
-See the [complete table of 14 endpoints](#endpoints) for paths and purposes.
+See the [complete table of 15 endpoints](#endpoints) for paths and purposes.
 
 These eight endpoints retrieve or calculate results using discovered identifiers. Each example is followed by the rules governing its response. The identifiers and dates remain illustrative; use values supported by the selected sources.
 
@@ -245,6 +263,8 @@ and full review evidence files are not included in report summaries. Evaluation
 completion does not establish predictive validity. Synthetic results remain
 explicitly synthetic.
 
+The saved threshold and metrics are authoritative for that run. Changing the research command's default cutoff does not rewrite or reinterpret existing reports. Derived cutoff evaluations retain `result.evaluation.derivation`, including the source run ID, source report hash and exploratory flags. Reusing saved probabilities at another cutoff does not refit the model or establish performance on unseen data.
+
 ### Saved research records
 
 Retrieve a page of saved predictions from the same run:
@@ -260,6 +280,13 @@ The `section` values are `predictions`, `identities`, `excluded_positives`,
 `snapshot_issues`, `sources` and `excluded_reference_dates`. Complete candidate-level
 observation artifacts remain part of the saved offline run; this API exposes the
 report results.
+
+Nine-feature prediction records include the observed outcome `label`, baseline,
+matched-comparison and primary model probabilities, and the primary predictors,
+observation date and input fingerprint. The outcome label is not a model
+classification. Positive classifications use `probability >= result.evaluation.threshold`
+from the selected report. Derived cutoff reports reuse the same probabilities;
+cutoff-dependent metrics can differ.
 
 ## Limits and errors
 
@@ -286,10 +313,31 @@ Error bodies contain `error.code` and `error.message`. Parameter validation erro
 also identify the affected fields. Database credentials and SQL details are omitted.
 
 Routes validate HTTP inputs, services apply query/identity contracts, and repositories
-read existing database evidence or configured saved files. Feature calculations reuse
-the existing bounded 20-session implementation. Synchronous data handlers run in
+read existing database evidence or configured saved files. The feature endpoint uses
+the bounded 20-session calculations; financial context reads up to 121 observations. Synchronous data handlers run in
 FastAPI's worker threads. Research training and ingestion remain separate commands. The
 [explanation endpoint](explanations.md) calls OpenAI after retrieving its evidence;
 GET endpoints remain usable when OpenAI is unavailable. See [FastAPI concurrency](https://fastapi.tiangolo.com/async/).
 The API binds locally in the startup example; hosting and access control require
 separate deployment configuration.
+
+## Financial context
+
+`GET /api/v1/securities/{security_id}/financial-context?review_id=sample&reference_date=2026-07-31&benchmark_id=sp500` returns descriptive indicators and their source evidence. `benchmark_id` is optional; omitted or unavailable benchmark history produces null market comparisons. An unknown configured benchmark ID returns 404; mixing real and synthetic data returns 422. The route computes at most 121 observations per series and makes no external requests.
+
+Configure `benchmarks` in the existing API configuration as a map from identifiers to review JSON paths, for example `"benchmarks": {"sp500": "benchmark-review.json"}`. Restart to load changes. A benchmark review contains:
+
+- `review_version: "benchmark-review-v1"`, `review_id`, `reviewed_on`, `dataset_id`, `data_kind`, `provider`, `price_basis`, `adjustment_settings`, `limitations`, `currency: "USD"`, and `return_convention: "price_return"`.
+- `basis_review` with the same decision fields as the [feature review](features.md#review-manifest).
+- `benchmark` with decision fields `status`, `start`, `end`, `description`, `evidence`, plus `provider_symbol` (`^GSPC` or `SPY`), `instrument_type` (`INDEX` or `ETF` respectively), and `sources` containing exact `source_sha256` and `metadata_sha256` pins.
+
+The benchmark is reviewed independently of membership. Stock mappings still use source-scoped security IDs and the existing reviewed-history gates. The optional stock-review policy and formulas are documented in [financial context](features.md#descriptive-financial-context). Existing feature, ranking and saved-run endpoints retain their contracts.
+
+## Nine-feature reports
+
+Register the primary report and its five derived cutoff files under distinct
+`runs` IDs. Discovery returns the selected report’s threshold, version and hash.
+`monthly-removal-nine-v1` summaries contain the constant baseline, matched comparison
+and primary nine-feature evaluation, with common cohort counts, independent scalers,
+fitted parameters and metrics. Predictions retain aligned probabilities, exact dated
+primary model inputs and fingerprints.

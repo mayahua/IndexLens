@@ -20,6 +20,7 @@ from .loading import load_price_csv
 from .metadata import PriceMetadata, fingerprint
 from .yahoo import (
     BASIS,
+    BENCHMARKS,
     SETTINGS,
     YFINANCE_VERSION,
     YahooValidationError,
@@ -96,6 +97,9 @@ def validate_manifest(raw: dict[str, Any]) -> dict[str, Any]:
             r"[A-Za-z0-9^=._-]{1,40}", candidate
         ):
             raise ValueError("Invalid candidate provider symbol.")
+        instrument = identity.get("instrument_type", "EQUITY")
+        if instrument != "EQUITY" and BENCHMARKS.get(candidate) != instrument:
+            raise ValueError("Only declared S&P benchmark instruments are supported.")
     return raw
 
 
@@ -215,6 +219,8 @@ async def ingest_manifest(
             adapter_version="yahoo-chart-v1",
             yfinance_version=YFINANCE_VERSION,
         )
+        if identity.get("instrument_type", "EQUITY") != "EQUITY":
+            request["instrument_type"] = identity["instrument_type"]
         return request
 
     async def one(identity: dict[str, Any]) -> dict[str, Any]:
@@ -287,7 +293,13 @@ async def ingest_manifest(
                     evidence=str(attempt.relative_to(cache)),
                 )
             payload = checked_payload(attempt, receipt)
-            rows, provider_metadata = chart_records(payload, symbol, start, end)
+            rows, provider_metadata = chart_records(
+                payload,
+                symbol,
+                start,
+                end,
+                instrument_type=request.get("instrument_type", "EQUITY"),
+            )
             coverage = session_coverage(rows, start, end)
             csv_path = attempt / "logical.csv"
             csv_bytes = logical_csv(rows)

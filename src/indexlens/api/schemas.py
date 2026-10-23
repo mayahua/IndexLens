@@ -43,6 +43,7 @@ class Settings(BaseModel):
     model_config = ConfigDict(extra="forbid")
     indices: dict[Identifier, IndexConfig] = Field(max_length=100)
     reviews: dict[Identifier, str] = Field(default_factory=dict, max_length=100)
+    benchmarks: dict[Identifier, str] = Field(default_factory=dict, max_length=10)
     runs: dict[Identifier, str] = Field(default_factory=dict, max_length=100)
 
 
@@ -87,7 +88,9 @@ class SavedInput(BaseModel):
 
 class SavedRun(BaseModel):
     model_config = ConfigDict(extra="allow")
-    research_version: Literal["monthly-removal-v2"]
+    research_version: Literal[
+        "monthly-removal-v2", "monthly-removal-context-v1", "monthly-removal-nine-v1"
+    ]
     feature_version: str
     data_kind: Kind
     dataset_id: str

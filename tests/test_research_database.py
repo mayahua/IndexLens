@@ -132,11 +132,15 @@ def setup(
 
 
 def run(
-    database: Engine, bundle: tuple[dict[str, Any], dict[str, Any], dict[str, Any]]
+    database: Engine,
+    bundle: tuple[dict[str, Any], dict[str, Any], dict[str, Any]],
+    cutoff: float = 0.05,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     manifest, review, ingestion = bundle
     with Session(database) as session:
-        return run_research(session, manifest, Review.from_dict(review), ingestion, 42)
+        return run_research(
+            session, manifest, Review.from_dict(review), ingestion, 42, cutoff
+        )
 
 
 def test_full_pipeline_retains_exclusions_dates_and_event_counts(
@@ -325,6 +329,14 @@ def test_cli_run_record_and_repeatability(
         report = execute(config, output)
         assert report["code"]["revision"] and report["code"]["file_sha256"]
         assert report["package_versions"]["scikit-learn"]
+        saved = json.loads((output / "report.json").read_text())
+        assert saved["evaluation"]["threshold"] == 0.05
+        for model in ("baseline", "logistic"):
+            assert saved["evaluation"][model]["metrics"]["threshold"] == 0.05
+        assert saved["evaluation"]["baseline"]["metrics"]["confusion_matrix"] == [
+            [0, 3],
+            [0, 1],
+        ]
         assert report["observation_artifact"]["rows"] == 14
         with gzip.open(output / "observations.jsonl.gz", "rt") as stream:
             assert len(list(stream)) == 14
@@ -341,6 +353,46 @@ def test_cli_run_record_and_repeatability(
         assert repeated["evaluation"] == report["evaluation"]
         assert repeated["observation_artifact"] == report["observation_artifact"]
         original_config = config.read_bytes()
+        config.write_text(
+            json.dumps(
+                json.loads(original_config)
+                | {
+                    "config_version": "removal-run-v2",
+                    "cutoff": 0.002,
+                }
+            )
+        )
+        selected = execute(config, output / "selected")
+        assert selected["configuration"]["cutoff"] == 0.002
+        assert selected["evaluation"]["threshold"] == 0.002
+        for name in ("baseline", "logistic"):
+            assert selected["evaluation"][name]["metrics"]["threshold"] == 0.002
+        assert (
+            selected["evaluation"]["predictions"] == report["evaluation"]["predictions"]
+        )
+        assert "0.002 classification cutoff" in selected["limitations"][-1]
+        override = output / "override"
+        assert (
+            main(
+                [
+                    "--config",
+                    str(config),
+                    "--output",
+                    str(override),
+                    "--cutoff",
+                    "0.0016",
+                ]
+            )
+            == 0
+        )
+        overridden = json.loads((override / "report.json").read_text())
+        assert overridden["configuration"]["cutoff"] == 0.0016
+        assert overridden["evaluation"]["threshold"] == 0.0016
+        assert (
+            overridden["evaluation"]["predictions"]
+            == report["evaluation"]["predictions"]
+        )
+        config.write_bytes(original_config)
 
         def run_while_config_changes(
             session: Session,
@@ -348,19 +400,28 @@ def test_cli_run_record_and_repeatability(
             review: Review,
             ingestion: dict[str, Any],
             seed: int,
+            cutoff: float,
         ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
             config.write_text(json.dumps(json.loads(original_config) | {"seed": 43}))
-            return run_research(session, manifest, review, ingestion, seed)
+            return run_research(session, manifest, review, ingestion, seed, cutoff)
 
         monkeypatch.setattr(research_cli, "run_research", run_while_config_changes)
         changed_output = output / "config_changed"
         changed = execute(config, changed_output)
         assert json.loads(config.read_bytes())["seed"] == 43
-        assert changed["configuration"] == json.loads(original_config)
-        assert (changed_output / "config.json").read_bytes() == original_config
-        assert changed["input_files"]["config"]["sha256"] == sha256(
-            original_config
-        ).hexdigest()
+        assert changed["configuration"] == json.loads(original_config) | {
+            "config_version": "removal-run-v2",
+            "cutoff": 0.05,
+        }
+        assert (changed_output / "config.input.json").read_bytes() == original_config
+        assert (
+            json.loads((changed_output / "config.json").read_text())
+            == changed["configuration"]
+        )
+        assert (
+            changed["input_files"]["config"]["sha256"]
+            == sha256(original_config).hexdigest()
+        )
         assert changed["evaluation"] == report["evaluation"]
     finally:
         import shutil
@@ -419,8 +480,15 @@ def test_explicit_historical_alias_reuses_stored_evidence_and_retains_failure(
 @pytest.mark.parametrize(
     "restriction",
     [
-        "implicit", "cik", "pins", "dates", "compact_start", "compact_end",
-        "owner", "unresolved", "chain",
+        "implicit",
+        "cik",
+        "pins",
+        "dates",
+        "compact_start",
+        "compact_end",
+        "owner",
+        "unresolved",
+        "chain",
     ],
 )
 def test_shared_history_requires_explicit_consistent_alias_review(
@@ -449,7 +517,6 @@ def test_shared_history_requires_explicit_consistent_alias_review(
         review["universe"][0]["historical_alias_of"] = "OLD"
     with pytest.raises(ValueError):
         Review.from_dict(review)
-
 
 
 def test_shared_history_accepts_equivalent_date_formats(

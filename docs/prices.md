@@ -132,3 +132,18 @@ IndexLens saves original Yahoo chart responses and retrieval receipts before con
 The [database guide's test commands](database.md#checks) include the price code. Tests check that equivalent HTTP and CSV examples produce the same values, and cover calendar gaps, mismatched symbols, processing the full identity list, cache reuse and alteration, temporary and permanent failures, retry limits, request spacing, timeouts, cancellation and undoing failed loads. Provider tests use synthetic examples and simulated download workers. PostgreSQL tests use separate schemas so application tables are preserved.
 
 Loading preserves source evidence and reports data quality. The [feature guide](features.md) explains the additional approvals and complete observation windows required for calculations.
+
+## S&P benchmark ingestion
+
+The benchmark command uses the same cache, pacing, retries, normalization and PostgreSQL tables as equity ingestion:
+
+```sh
+python -m indexlens.prices.fetch benchmark --dataset-id example-benchmark-v1 \
+  --start 2025-01-01 --end 2026-08-01
+```
+
+The default is `^GSPC`, explicitly checked as an `INDEX`. `--symbol SPY` selects the ETF proxy and requires `ETF`. Ordinary equity downloads still require `EQUITY`; benchmark instruments do not become constituent identities. Existing equity cache keys remain unchanged. Use a separate benchmark dataset and a pinned benchmark review before comparison.
+
+The default compares Yahoo quote Close price changes with an S&P price index. SPY is a tradable proxy with fund expenses and distribution effects. Neither route switches to dividend-adjusted Adj Close or promises total returns. See [Yahoo's adjustment explanation](https://help.yahoo.com/kb/SLN28256.html) and [SPY's fund description](https://www.ssga.com/us/en/institutional/etfs/state-street-spdr-sp-500-etf-trust-spy). Successful fetching establishes access and coverage, not historical basis approval or redistribution rights.
+
+For the [nine-feature research workflow](research.md), load and review benchmark prices across the entire training/test price envelope, including the preceding 60-session window. A benchmark that starts only in the test period cannot supply training predictors. Retain the frozen retrieval vintage and exact stock/benchmark source pins when reproducing results; revised downloads can change features and probabilities.

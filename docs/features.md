@@ -1,16 +1,23 @@
 # Numerical features and momentum ranking
 
-A **feature** is a numerical summary of a security's price or volume history.
-IndexLens calculates three: **20-session return** (change in closing price),
-**volatility** (variation in daily returns), and **average volume** (mean trading
-volume).
+In this guide, a **feature** is a calculated numerical measure derived from
+historical market data; a **model predictor** is a feature selected as an input
+to a predictive model. IndexLens calculates and uses these features in three ways:
 
-These calculations use version `observed-20-v2`. IndexLens ranks the declared
-universe (the listed securities) by 20-session return.
-The ranking is descriptive; it does not estimate inclusion or removal probabilities.
-[Monthly removal research](research.md) reuses these features for a separate model comparison.
-Load prices using
-[the price guide](prices.md) and configure PostgreSQL using
+- **Momentum ranking (`observed-20-v2`):** Three short-window features—20-session
+  return, volatility and average share volume—support descriptive rankings of a
+  declared security universe by return.
+- **Removal research (`removal-nine-features-v1`):** Nine predictors based on
+  price, activity and benchmark-relative histories support [monthly S&P 500 removal research](research.md).
+- **Financial context (`financial-context-v1`):** Sixteen features, including
+  those nine predictors, provide broader historical context for analysis.
+
+Momentum rankings describe past performance, the removal model estimates a
+defined future outcome, and financial context provides supporting evidence.
+The original feature endpoint remains available separately from the
+financial-context endpoint.
+
+Load prices using [the price guide](prices.md) and configure PostgreSQL using
 [the database guide](database.md).
 
 ## Query without a notebook
@@ -23,8 +30,8 @@ values supported by your data:
 python -m indexlens.features --review path/to/review.json --date 2026-05-29
 ```
 
-This returns all three features and a descending **momentum ranking** for the
-manifest's full declared universe. An observation on the requested date must
+This returns the return, volatility and volume features, plus a descending
+**momentum ranking** for the manifest's full declared universe. An observation on the requested date must
 exist for every identity before any ranks are assigned. The command never picks
 a different date per security or searches backwards to hide an unavailable
 window. Choose a common date using the ingestion coverage reports; existence of
@@ -191,6 +198,36 @@ across installations. Save the JSON with its review so the results can be reprod
 Tests cover the numerical formulas, review checks and command behavior using
 synthetic fixtures and isolated PostgreSQL schemas.
 
-## Feature choices and further work
+## Feature roles
 
-The three features were chosen for their straightforward formulas and coverage of price movement, variability and trading activity. The removal research workflow uses these features as model inputs. Research results must be interpreted alongside data coverage, sample size and classification performance. Further experiments could compare feature combinations and probability cutoffs; see the research guide's [limitations and further work](research.md#limitations-and-further-work).
+The feature endpoint and momentum rankings use the short-window calculations above. They describe past price changes and trading activity. The [removal research model](research.md#fixed-comparison-and-metrics) uses nine explicitly versioned predictors calculated from reviewed stock and benchmark histories. Additional descriptive features support company-level context and explanations but are not automatically model inputs.
+
+## Descriptive financial context
+
+The financial-context API uses version `financial-context-v1`. Its sixteen features include all nine removal-model predictors plus seven supplementary features for analyst-style descriptions. The separate `observed-20-v2` feature endpoint remains available for momentum rankings.
+
+| Feature | Complete window | Calculation / unit |
+|---|---|---|
+| `return_20`, `return_60`, `return_120` | 21, 61, 121 closes | last / first − 1, fraction |
+| `volatility_20` | 21 closes | sample standard deviation of 20 simple returns, divisor 19, daily and unannualized |
+| `average_dollar_volume_20`, `average_dollar_volume_60` | 20 or 60 paired closes and volumes | mean(Close × volume), approximate USD per observed session |
+| `drawdown_120` | 120 closes including the reference date | current / highest close − 1 |
+| `benchmark_return_20/60/120`, `excess_return_20/60/120` | identical stock/benchmark date sequences | benchmark price return; stock return minus benchmark return |
+| `benchmark_volatility_20`, `relative_volatility_20` | identical 21-date sequences | benchmark sample standard deviation; stock volatility / benchmark volatility |
+| `dollar_volume_20_to_60_ratio` | complete component windows | shorter mean / longer mean |
+
+Returns and differences are fractional values, not percentages. Volatility ratios above unity indicate greater historical variability, not a forecast. A zero denominator produces null. Drawdown is distance below a trailing closing high, not the maximum peak-to-trough loss. The dollar-volume windows overlap, so their ratio compares recent activity with a broader baseline rather than measuring growth between consecutive periods. Dollar volume is not transaction-level turnover or the official S&P liquidity eligibility test.
+
+The reader selects at most 121 dated observations per series before validity checks. It ignores future dates and requires an observation on the requested date. Missing, invalid and unapproved rows retain their positions. Benchmark windows must have exactly the stock window's dates, including intermediate dates; an intersection or forward-fill cannot repair gaps. Entirely absent dates are not invented, and these remain observed-session calculations rather than guaranteed complete exchange-calendar windows.
+
+Stock reviews may add `financial_context` with `currency: "USD"`, `return_convention: "price_return"` and an optional `dollar_volume_review`. The latter uses the same status, inclusive start/end, description and evidence fields as `basis_review`. Approve it only for paired Close and volume with a reviewed compatible adjustment basis. Each dollar-volume window must fall inside its approval dates. Missing approval leaves dollar volume null; other valid features remain available. Yahoo context requires the existing quote Close basis and unchanged adjustment settings; Adj Close is never substituted. Split-adjusted prices must be paired with consistently adjusted volume. A review records a decision, not independent proof of provider correctness.
+
+Financial-context results include exact dates, units, missingness, public input provenance, an input hash, review hashes and selected benchmark identity. Calculations are retrospective on pinned provider-returned data. Excluding future observation dates does not certify that later-retrieved, possibly revised prices were available in exactly that form historically.
+
+## Fitted predictors and descriptive inventory
+
+The primary `removal-nine-features-v1` order is recorded in the [research guide](research.md#fixed-comparison-and-metrics). It reuses the existing calculations and complete-window rules. Model eligibility requires those nine predictors and the historical source, membership and label checks. Supplementary 120-session values can remain null.
+
+The financial-context GET response contains sixteen features, including the nine model predictors. The separate feature endpoint exposes `average_volume_20` (average share volume), which differs from average **dollar** volume and is not a fitted input of the nine-feature model. Supplementary features remain independently available or null with reasons, rather than affecting research eligibility.
+
+The calculation's original input fingerprint is exposed as `research_input_sha256` for exact saved-input matching; `input_sha256` continues to fingerprint the public GET inputs.

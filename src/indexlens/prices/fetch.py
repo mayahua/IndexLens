@@ -15,6 +15,7 @@ from indexlens.db.models import PriceDataset, PriceSource
 from indexlens.db.session import database_engine
 
 from .ingestion import Options, ingest_manifest, validate_manifest
+from .yahoo import BENCHMARKS
 
 DEMO_SYMBOLS = ("MSFT", "JPM", "XOM", "JNJ", "CAT")
 
@@ -22,7 +23,7 @@ DEMO_SYMBOLS = ("MSFT", "JPM", "XOM", "JNJ", "CAT")
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="mode", required=True)
-    for name in ("demo", "research"):
+    for name in ("demo", "research", "benchmark"):
         command = commands.add_parser(name)
         command.add_argument("--dataset-id", required=True)
         command.add_argument("--cache", type=Path, default=Path("data/cache/yahoo"))
@@ -35,9 +36,11 @@ def main(argv: list[str] | None = None) -> int:
         command.add_argument("--batch-size", type=int, default=500)
         command.add_argument("--offline", action="store_true")
         command.add_argument("--retry-failed", action="store_true")
-        if name == "demo":
+        if name != "research":
             command.add_argument("--start", type=date.fromisoformat, required=True)
             command.add_argument("--end", type=date.fromisoformat, required=True)
+            if name == "benchmark":
+                command.add_argument("--symbol", choices=BENCHMARKS, default="^GSPC")
         else:
             command.add_argument("--manifest", type=Path, required=True)
     args = parser.parse_args(argv)
@@ -45,19 +48,27 @@ def main(argv: list[str] | None = None) -> int:
         if args.mode == "research":
             manifest = json.loads(args.manifest.read_bytes())
         else:
+            symbols = (args.symbol,) if args.mode == "benchmark" else DEMO_SYMBOLS
             manifest = dict(
-                version="yahoo-five-symbol-demo-v1",
+                version="yahoo-benchmark-v1"
+                if args.mode == "benchmark"
+                else "yahoo-five-symbol-demo-v1",
                 data_kind="real",
-                source_sha256=sha256("\n".join(DEMO_SYMBOLS).encode()).hexdigest(),
+                source_sha256=sha256("\n".join(symbols).encode()).hexdigest(),
                 source_note="Declared price demo universe; no security join approved.",
-                eligible_source_identity_count=len(DEMO_SYMBOLS),
+                eligible_source_identity_count=len(symbols),
                 identities=[
                     dict(
                         symbol=s,
                         cik="",
                         provider_mapping_status="pending_historical_review",
                     )
-                    for s in DEMO_SYMBOLS
+                    | (
+                        dict(instrument_type=BENCHMARKS[s])
+                        if args.mode == "benchmark"
+                        else {}
+                    )
+                    for s in symbols
                 ],
                 price_request_envelope=dict(
                     start_inclusive=args.start.isoformat(),

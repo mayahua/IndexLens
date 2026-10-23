@@ -175,6 +175,22 @@ def create_app(
         with access() as service:
             return bounded(service.features(security_id, review_id, reference_date))
 
+    @app.get(
+        "/api/v1/securities/{security_id}/financial-context", response_model=Result
+    )
+    def financial_context(
+        security_id: SecurityId,
+        review_id: Identifier,
+        reference_date: Day,
+        benchmark_id: Identifier | None = None,
+    ) -> dict[str, Any]:
+        with access() as service:
+            return bounded(
+                service.financial_context(
+                    security_id, review_id, reference_date, benchmark_id
+                )
+            )
+
     @app.get("/api/v1/rankings", response_model=Page)
     def rankings(
         review_id: Identifier,

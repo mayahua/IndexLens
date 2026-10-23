@@ -12,6 +12,11 @@ from sqlalchemy.orm import Session
 
 from indexlens.db.models import PriceSource, SourceVersion
 from indexlens.db.repository import membership_at_db, source_events_db
+from indexlens.features.context_review import (
+    BenchmarkReview,
+    benchmark_history,
+    reviewed_context,
+)
 from indexlens.features.core import FEATURE_VERSION, calculate
 from indexlens.features.query import reviewed_history
 from indexlens.features.review import Review, decision_blockers
@@ -19,7 +24,16 @@ from indexlens.prices.metadata import fingerprint
 
 from . import RESEARCH_VERSION
 from .labels import Schedule, label_snapshot
-from .model import compare
+from .model import (
+    DEFAULT_CUTOFF,
+    NINE_FEATURE_VERSION,
+    NINE_FEATURES,
+    NINE_RESEARCH_VERSION,
+    compare,
+    compare_nine,
+    cutoff_limitation,
+    validate_cutoff,
+)
 
 
 def feature_dates(schedule: Schedule) -> dict[date, date]:
@@ -51,6 +65,7 @@ def build_observations(
     manifest: dict[str, Any],
     review: Review,
     ingestion: dict[str, Any],
+    benchmark: BenchmarkReview | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     schedule = Schedule.from_manifest(manifest)
     raw = review.declarations
@@ -144,6 +159,16 @@ def build_observations(
                 "Manifest/review must pin the active eligible source records."
             )
     dates = feature_dates(schedule)
+    market = (
+        []
+        if benchmark is None
+        else benchmark_history(
+            session,
+            benchmark,
+            schedule.price_end - timedelta(days=1),
+            history_start=schedule.price_start,
+        )
+    )
     identity_results = []
     for identity in sorted(grouped):
         candidates = grouped[identity]
@@ -217,6 +242,51 @@ def build_observations(
                 exclusion_reasons=sorted(set(reasons)),
                 eligible=not reasons,
             )
+            if benchmark is not None:
+                context = reviewed_context(
+                    history[max(0, end - 121) : end], market, day, review, benchmark
+                )
+                indicators = context["indicators"]
+                row["features"].update({k: v["value"] for k, v in indicators.items()})
+                row["feature_unavailable"].update(
+                    {
+                        k: v["unavailable"]
+                        for k, v in indicators.items()
+                        if v["unavailable"]
+                    }
+                )
+                row["windows"].update(
+                    {k: v["observed_dates"] for k, v in indicators.items()}
+                )
+                # Legacy feature gates and source/label checks still apply. Only
+                # required context predictors contribute additional exclusions.
+                reasons += [
+                    reason
+                    for f in NINE_FEATURES
+                    for reason in indicators[f]["unavailable"]
+                ]
+                row.update(
+                    context_input_sha256=context["input_sha256"],
+                    context_input_records={
+                        key: [
+                            dict(
+                                date=i["observation_date"],
+                                records=[
+                                    [
+                                        p["source_id"],
+                                        p["record_position"],
+                                        p["record_sha256"],
+                                    ]
+                                    for p in i["provenance"]
+                                ],
+                            )
+                            for i in items
+                        ]
+                        for key, items in context["inputs"].items()
+                    },
+                    eligible=not reasons,
+                    exclusion_reasons=sorted(set(reasons)),
+                )
         identity_results.append(
             dict(
                 symbol=identity[0],
@@ -308,10 +378,28 @@ def build_observations(
             "Repeated securities and clustered removals are dependent observations.",
             "Observed-session windows retain dated invalid rows; entirely absent "
             "interior sessions remain a separate ingestion coverage limitation.",
-            "No test-based tuning; 0.5 is fixed, including all-negative predictions.",
             "Removal probabilities are distinct from descriptive momentum ranks.",
         ],
     )
+    if benchmark is not None:
+        report.update(
+            research_version=NINE_RESEARCH_VERSION,
+            feature_version=NINE_FEATURE_VERSION,
+            benchmark_review=benchmark.declarations,
+            benchmark_review_sha256=benchmark.sha256,
+        )
+        report["limitations"][0] = (
+            "Retrospective membership and downloaded prices do not establish "
+            "point-in-time availability. Later revisions may affect values. "
+            "Nine specified predictors enter the primary model; other indicators "
+            "are supplementary descriptive context."
+        )
+        report["limitations"].append(
+            "Feature selection followed repeated inspection of this historical "
+            "test period. Matched-cohort comparisons are exploratory and do not "
+            "establish independent predictive improvement. Rare removals make "
+            "small Brier scores possible even for a weak constant baseline."
+        )
     return rows, report
 
 
@@ -321,7 +409,15 @@ def run_research(
     review: Review,
     ingestion: dict[str, Any],
     seed: int,
+    cutoff: float = DEFAULT_CUTOFF,
+    benchmark: BenchmarkReview | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    rows, report = build_observations(session, manifest, review, ingestion)
-    report["evaluation"] = compare(rows, seed)
+    cutoff = validate_cutoff(cutoff)
+    rows, report = build_observations(session, manifest, review, ingestion, benchmark)
+    report["evaluation"] = (
+        compare(rows, seed, cutoff)
+        if benchmark is None
+        else compare_nine(rows, seed, cutoff)
+    )
+    report["limitations"].append(cutoff_limitation(cutoff))
     return rows, report

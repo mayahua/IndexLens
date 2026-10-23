@@ -22,6 +22,7 @@ SETTINGS = dict(
 )
 BASIS = "yahoo_returned_ohlc_unadjusted_library_raw_unverified"
 YFINANCE_VERSION = "1.7.0"
+BENCHMARKS = {"^GSPC": "INDEX", "SPY": "ETF"}
 COLUMNS = (
     "provider_symbol",
     "observation_date",
@@ -49,6 +50,8 @@ def chart_records(
     symbol: str,
     start: date,
     end: date,
+    *,
+    instrument_type: str = "EQUITY",
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Use exchange-local daily dates, retaining nulls and raw action evidence."""
     try:
@@ -59,7 +62,9 @@ def chart_records(
         metadata = result["meta"]
         if metadata["symbol"].upper() != symbol.upper():
             raise YahooValidationError("provider_symbol_mismatch")
-        if metadata.get("instrumentType") != "EQUITY":
+        if (
+            instrument_type != "EQUITY" and BENCHMARKS.get(symbol) != instrument_type
+        ) or metadata.get("instrumentType") != instrument_type:
             raise YahooValidationError("unexpected_instrument_type")
         tz = ZoneInfo(metadata["exchangeTimezoneName"])
         timestamps = result.get("timestamp") or []
