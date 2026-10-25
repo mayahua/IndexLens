@@ -1,0 +1,33 @@
+{
+  "title": "FMC financial analysis",
+  "kind": "application_side_rendering_of_original_generation",
+  "provider": "openai",
+  "generation": {
+    "actual_model": "gpt-6-astra",
+    "requested_reasoning_effort": "high",
+    "effective_reasoning_effort": "high",
+    "created_at_utc": "2026-10-25T10:45:01+00:00"
+  },
+  "presentation_version": "verified-display-v5",
+  "original_presentation_version": "verified-display-v4",
+  "original_application_response_sha256": "7a9a3e68f43f4faea4a228fdae6351658daf02bea90acd3505c6ebb714c1c77a",
+  "original_evidence_sha256": "240c2b346607009dcb23fb94cc3a9d1da0bcdb81274a3dfb7b72b0011ce4c4cb",
+  "public_evidence_sha256": "8651d9466fab679bbf9f91f9e739f49963ec37e18525292e5171a758566b76e2",
+  "raw_draft_sha256": "a854f997ab84e8ec64f5be6da4d6f61a566fcf649c3c439c42f77b2ccb786958",
+  "structured_explanation_sha256": "8e1a148e4ffa015503b75527450f584d45f2f5842384e408f7ae7b62c44ff74a",
+  "readable_sha256": "bab8abff7b718768576f04f40646b8c3800d1b08f9060fe18abb6264b0962c36",
+  "evidence_omissions": [
+    {
+      "reference": "/saved_research/result/evaluation/derivation/source_report",
+      "value_sha256": "44251cadbafa984037e33a8f40de830a134743bb38f8f23a58dbbbe8191f0867",
+      "reason": "Operational source location"
+    },
+    {
+      "reference": "/saved_research/result/evaluation/derivation/code/working_tree_status",
+      "value_sha256": "fb51652da4aeb1f20b1f9f9c7f27b796e8fc5dd5993d1d1188099eb05d172305",
+      "reason": "Internal working-tree inventory"
+    }
+  ],
+  "hash_encoding": "SHA-256 of UTF-8 application canonical JSON: ensure_ascii=True, allow_nan=False, compact separators, insertion order retained. Application response and readable hashes cover file bytes.",
+  "verification_scope": "Public hashes and deterministic rendering are locally reproducible. Original response and full evidence hashes identify retained originals; recomputing those hashes requires the originals. Hashes do not authenticate provider origin or certify source accuracy."
+}

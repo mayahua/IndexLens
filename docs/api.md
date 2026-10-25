@@ -81,7 +81,7 @@ The table lists all 15 IndexLens endpoints. Linked descriptions lead to their re
 | `GET /api/v1/rankings` | [Rank a review's universe by past returns](#momentum-rankings) |
 | `GET /api/v1/research/runs/{run_id}` | [Retrieve three-way model metrics and the selected cutoff](#saved-research-summary) |
 | `GET /api/v1/research/runs/{run_id}/records` | [Retrieve a page of saved research records](#saved-research-records) |
-| `POST /api/v1/research/explain` | [Explain event, ranking or saved-run evidence](explanations.md) |
+| `POST /api/v1/research/explain` | [Explain saved nine-feature research, company financial context, events or rankings](explanations.md) |
 
 Braced names such as `{index_id}` are **path parameters**: replace them with discovered identifiers. Values after `?`, separated by `&`, are **query parameters**, such as `as_of=2026-01-07` or `limit=100`. Changing these values supplies different inputs to the same endpoint.
 
@@ -341,3 +341,5 @@ Register the primary report and its five derived cutoff files under distinct
 and primary nine-feature evaluation, with common cohort counts, independent scalers,
 fitted parameters and metrics. Predictions retain aligned probabilities, exact dated
 primary model inputs and fingerprints.
+
+A financial-context explanation can attach a supported nine-feature report when the source-scoped security, membership hash, data kind, stock and benchmark reviews, exact reference/observation date, input hash and predictor values agree. A mismatch returns `422 research_context_mismatch`; an absent or ambiguous prediction returns `422 prediction_unavailable`. No weekend-to-session adjustment is performed by this join. The selected report controls the cutoff. Supplementary missingness does not prevent an otherwise matching prediction.

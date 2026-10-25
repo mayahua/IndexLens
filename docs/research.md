@@ -7,7 +7,10 @@ the original three-feature logistic regression and the nine-feature logistic
 regression on exactly the same eligible cohort. Removal probabilities answer a
 different question from descriptive momentum ranking.
 
-Feature selection followed repeated inspection of the historical test period; these results do not establish independent predictive improvement.
+The [verified research example](examples/removal-research/README.md) records
+the matched comparison and five illustrative cutoffs. Feature selection followed
+repeated inspection of the historical test period; these results do not establish
+independent predictive improvement.
 
 ## Fit and save an experiment
 
@@ -271,7 +274,7 @@ The fixed cutoff grid below uses **one nine-feature fit**. Changing the cutoff d
 | 0.005 | 498 | 8 | 490 | 11 | 1.61% | 42.11% | 3.09% |
 | 0.002 | 2,139 | 18 | 2,121 | 1 | 0.84% | 94.74% | 1.67% |
 
-Lower cutoffs identify more recorded removals but generate many more false alerts. These are **illustrative decision thresholds**, not optimized operating points. The low event count and false-alert burden do not establish a useful deployment rule.
+Lower cutoffs identify more recorded removals but generate many more false alerts. These are **illustrative decision thresholds**, not optimized operating points. The low event count and false-alert burden do not establish a useful deployment rule. The [verified numerical example](examples/removal-research/README.md) links to the full-precision saved metrics, cutoff results and source hashes.
 
 ## Limitations and further work
 

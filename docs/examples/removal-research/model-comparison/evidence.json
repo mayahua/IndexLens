@@ -1,0 +1,528 @@
+{
+  "result": {
+    "created_at": "2026-10-24T12:19:22.202642+00:00",
+    "calendar": "XNYS",
+    "feature_date_policy": "last scheduled session <= reference_date",
+    "outcome_interval": "(reference_date, reference_date + 30 calendar days]",
+    "limitations": [
+      "Source report limitation: Retrospective membership and downloaded prices do not establish point-in-time availability. Later revisions may affect values. Nine specified predictors enter the primary model; other indicators are supplementary descriptive context.",
+      "Source report limitation: Mapping evidence and approval bounds are retrospective assumptions; unresolved identities and dates remain unavailable.",
+      "Source report limitation: Missing acquired/delisted histories and uneven mapping evidence select the evaluated population; results do not generalize to all members.",
+      "Source report limitation: Monthly 30-day windows can count one event twice and miss other events. Repeated securities and clustered removals are dependent observations.",
+      "Source report limitation: Observed-session windows retain dated invalid rows; entirely absent interior sessions remain a separate ingestion coverage limitation.",
+      "Source report limitation: Removal probabilities are distinct from descriptive momentum ranks.",
+      "Source report limitation: Feature selection followed repeated inspection of this historical test period. Matched-cohort comparisons are exploratory and do not establish independent predictive improvement. Rare removals make small Brier scores possible even for a weak constant baseline.",
+      "Source report limitation: The selected 0.05 classification cutoff is exploratory; performance on unseen data remains unverified.",
+      "The selected 0.05 classification cutoff is exploratory; performance on unseen data remains unverified.",
+      "This exploratory evaluation reuses saved labels and probabilities. The fitted model and its configuration are retained from the source. Comparisons on inspected test data are not independent validation and do not establish an optimal cutoff or predictive usefulness.",
+      "Predictive validity remains unestablished."
+    ],
+    "review_sha256": "3577899fce063df9a32bad0655b84a30ba1af163fc789e14ec349c7541a8d8b6",
+    "python_version": "3.12.13",
+    "package_versions": {
+      "indexlens": "0.1.0",
+      "numpy": "2.5.2",
+      "pandas": "3.0.5",
+      "scipy": "1.18.1",
+      "scikit-learn": "1.7.2",
+      "exchange-calendars": "4.13.2",
+      "SQLAlchemy": "2.0.52",
+      "psycopg": "3.3.6",
+      "yfinance": "1.7.0"
+    },
+    "reconciliation_references": {
+      "train": {
+        "observations": 17264,
+        "positive_observations": 52,
+        "negative_observations": 17212,
+        "distinct_positive_events": 51,
+        "month_ends": 35,
+        "excluded_observations": 368
+      },
+      "test": {
+        "observations": 9430,
+        "positive_observations": 31,
+        "negative_observations": 9399,
+        "distinct_positive_events": 31,
+        "month_ends": 19,
+        "excluded_observations": 134
+      }
+    },
+    "evaluation": {
+      "model_version": "scaled-logistic-nine-v1",
+      "features": [
+        "return_20",
+        "volatility_20",
+        "return_60",
+        "average_dollar_volume_20",
+        "average_dollar_volume_60",
+        "excess_return_20",
+        "excess_return_60",
+        "relative_volatility_20",
+        "dollar_volume_20_to_60_ratio"
+      ],
+      "seed": 42,
+      "threshold": 0.05,
+      "parameters": {
+        "C": 1.0,
+        "solver": "lbfgs",
+        "penalty": "l2",
+        "fit_intercept": true,
+        "class_weight": null,
+        "max_iter": 1000,
+        "tol": 1e-08,
+        "random_state": 42
+      },
+      "status": "evaluated",
+      "training_observations": 15289,
+      "test_observations": 9252,
+      "baseline": {
+        "model_version": "training-frequency-v1",
+        "probability": 0.0016351625351559945,
+        "metrics": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "average_precision": 0.002053610030263727,
+          "brier_score": 0.0020495678144134893,
+          "observations": 9252,
+          "predicted_removals": 0,
+          "false_alarms": 0,
+          "true_positives": 0,
+          "false_negatives": 19,
+          "threshold": 0.05,
+          "confusion_matrix": [
+            [
+              9233,
+              0
+            ],
+            [
+              19,
+              0
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {
+            "precision": "zero_denominator"
+          },
+          "limitations": []
+        }
+      },
+      "logistic": {
+        "metrics": {
+          "precision": 0.14285714285714285,
+          "recall": 0.05263157894736842,
+          "f1": 0.07692307692307693,
+          "average_precision": 0.036832804363353844,
+          "brier_score": 0.00202764592763664,
+          "observations": 9252,
+          "predicted_removals": 7,
+          "false_alarms": 6,
+          "true_positives": 1,
+          "false_negatives": 18,
+          "threshold": 0.05,
+          "confusion_matrix": [
+            [
+              9227,
+              6
+            ],
+            [
+              18,
+              1
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {},
+          "limitations": []
+        },
+        "scaling": {
+          "mean": [
+            0.012020433057925311,
+            0.018049363973055316,
+            0.019065162287652104,
+            557719492.889023,
+            557263192.0169472,
+            -0.0013594010547890297,
+            -0.005913498659128912,
+            1.9608091389224047,
+            1.002699044885609
+          ],
+          "scale": [
+            0.08731165965824089,
+            0.008614891231869844,
+            0.14648925675015054,
+            1903532535.0925338,
+            1859807557.399173,
+            0.07486665576998448,
+            0.13242524171554965,
+            1.0254789275207068,
+            0.16743199863225827
+          ],
+          "variance": [
+            0.00762332591227649,
+            7.421635093694791e-05,
+            0.021459102343211522,
+            3.623436112155809e+18,
+            3.458884150559078e+18,
+            0.00560501614618135,
+            0.017536444643421748,
+            1.051607030789019,
+            0.02803347416599254
+          ],
+          "fit_observations": 15289
+        },
+        "coefficients": [
+          0.16943460377876812,
+          0.287029759977881,
+          0.22055242355613613,
+          -1.6559831357620414,
+          -1.6855868162921501,
+          -0.342440215582192,
+          -0.8799257477498232,
+          -0.004191024630834716,
+          -0.15202043488989214
+        ],
+        "intercept": -7.370511426150185,
+        "classes": [
+          0,
+          1
+        ],
+        "iterations": [
+          39
+        ]
+      },
+      "unmet_requirements": [],
+      "fitted_features": [
+        "return_20",
+        "volatility_20",
+        "return_60",
+        "average_dollar_volume_20",
+        "average_dollar_volume_60",
+        "excess_return_20",
+        "excess_return_60",
+        "relative_volatility_20",
+        "dollar_volume_20_to_60_ratio"
+      ],
+      "matched_three": {
+        "metrics": {
+          "precision": 0.125,
+          "recall": 0.05263157894736842,
+          "f1": 0.07407407407407407,
+          "average_precision": 0.028536669582977098,
+          "brier_score": 0.0020386265975106655,
+          "observations": 9252,
+          "predicted_removals": 8,
+          "false_alarms": 7,
+          "true_positives": 1,
+          "false_negatives": 18,
+          "threshold": 0.05,
+          "confusion_matrix": [
+            [
+              9226,
+              7
+            ],
+            [
+              18,
+              1
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {},
+          "limitations": []
+        },
+        "scaling": {
+          "mean": [
+            0.012020433057925311,
+            0.018049363973055316,
+            6387580.491709729
+          ],
+          "scale": [
+            0.08731165965824089,
+            0.008614891231869844,
+            24996110.503508158
+          ],
+          "variance": [
+            0.00762332591227649,
+            7.421635093694791e-05,
+            624805540303590.9
+          ],
+          "fit_observations": 15289
+        },
+        "coefficients": [
+          -0.3869839858252497,
+          0.3534318808612195,
+          -0.2528211483298973
+        ],
+        "intercept": -6.657183074456244,
+        "classes": [
+          0,
+          1
+        ],
+        "iterations": [
+          20
+        ]
+      },
+      "comparator_features": [
+        "return_20",
+        "volatility_20",
+        "average_volume_20"
+      ],
+      "comparator_model_version": "scaled-logistic-v1",
+      "derivation": {
+        "version": "saved-cutoff-v1",
+        "kind": "saved_probability_cutoff_evaluation",
+        "source_run_id": "nine-2026-10-24",
+        "source_report_sha256": "f3b7f10e4a03c1fe209a6cc52516fb8aadcd9ec42cef2c681bdde307cf094400",
+        "source_created_at": "2026-10-24T12:16:12.666657+00:00",
+        "source_threshold": 0.05,
+        "selected_threshold": 0.05,
+        "classification": "probability >= threshold",
+        "evaluated_at": "2026-10-24T12:19:22.202642+00:00",
+        "exploratory": true,
+        "previously_inspected_test_data": true,
+        "code": {
+          "file_sha256": {
+            "src/indexlens/api/__init__.py": "0057606a7dc7e1dc255ce18e368748e70b1a89b89a21c28e2df2904cea5f5bed",
+            "src/indexlens/api/app.py": "a0875ba17d332169403229ec6250994f56f81ff525e3454483bdd8ca387875c4",
+            "src/indexlens/api/explanation.py": "d39ee9e95e22ba37f7f299e405e41893525b363fd26e54edcf523b050050e508",
+            "src/indexlens/api/logging.py": "3f392bfea5f1275de88a6a6b772f412af738997cbd82e998dd739b3621fd9034",
+            "src/indexlens/api/openai_provider.py": "6dfe74eea22f959820a8870e4e769502ff445a5fcb715d0b157a78e84b58cb92",
+            "src/indexlens/api/presentation.py": "7a3207923d79ee7fd885c65f886016257f5bc97cde4ac7609c2601f03b551d78",
+            "src/indexlens/api/repository.py": "9d2cde2fa18ee09471dc8cabbae17aed6bb7f84befefdefde1d75cea50c0c3b4",
+            "src/indexlens/api/request_limits.py": "dfbbfd7345ea2ede42e6e5996ff75bc21686a49d04205c692a89d998e48d1655",
+            "src/indexlens/api/schemas.py": "8dfecaa7abb0800928fd1a2af97fd8a36ee17ee8c6e0c833e632c6d5f658e39b",
+            "src/indexlens/api/service.py": "65f6e39134ff066eec962f347b796ab7472319d9b5783afd4a81303e1efb50d2",
+            "src/indexlens/data_audit.py": "35606dd115cb1648288a9be1805a18d41ba8b2d4d5acee922a56e6bbd8cc17a5",
+            "src/indexlens/db/__init__.py": "64424ea3b418ac85b035f2bcf4cfcdfee8d30663d29d35e1b4da4b61af51ab75",
+            "src/indexlens/db/__main__.py": "60d8105120e2b5c37856f3f3a01bac74a98f597fcf02488128003a6ff9e2ae0f",
+            "src/indexlens/db/loading.py": "feb970705a1270e0e9136debd2afce33bc12bd487a1c4bc148664143948f9624",
+            "src/indexlens/db/models.py": "c78cb2caceea2fb30b6beda23456b462cad27ff9325affba75ac309b1b8694f4",
+            "src/indexlens/db/repository.py": "d82eee122add38dccc8f81210f42097d0ff6e2e74c21d63ffc951c44c3f50687",
+            "src/indexlens/db/session.py": "b9ba906ad580b02435d9d2650df5d468fc30187292a929efab66c60a71e868af",
+            "src/indexlens/db/verification.py": "65cd938c4487413f4bf4dd95e1ec2285e17968542ef44aec61a769a990afd224",
+            "src/indexlens/features/__init__.py": "56234b16a686790d0737c819064f603dc8a7f51804226bbf2ffe3663b2ed37ae",
+            "src/indexlens/features/__main__.py": "4cbcf2ea8e9d1735c543b12565af1b7ae5d07a889d606a51995d97f3fd5f474c",
+            "src/indexlens/features/context.py": "0993a169f841bbf83d1c8cd18e347dcac70ec84eb06571fb83bea3c5f99df0df",
+            "src/indexlens/features/context_review.py": "29a48f3d48bd0d82268350a80e2afce697079fa9af506189db33fa064bba2f0f",
+            "src/indexlens/features/core.py": "6ef10c03771cc3f36a8ef4362e5cd03f5c0b55cd1f570b43cdf6aa27984b62b4",
+            "src/indexlens/features/query.py": "fdc2350e342e57c5fe5db3dbacdb600991ad7aebc18c0b15cf4018e6e3d71691",
+            "src/indexlens/features/review.py": "c628c36e3f2127ec80b894b9984fcce5312a17be4810da40911e4185384c15f1",
+            "src/indexlens/membership.py": "412e2094cace085f361bb6753d4601975d1e4953546855b8c114fc27c2018fb3",
+            "src/indexlens/prices/__init__.py": "33208375f6549cc5f4c8d7cf688e03fe16344712ff66a0415c77031c4362d7fd",
+            "src/indexlens/prices/__main__.py": "149f723fc85977e09f2b1229979e6615a779a532b926dc6f957cadc9c65af336",
+            "src/indexlens/prices/fetch.py": "3ca63bd80a6f7aed01b24a6743bb2e04a963cf6efefb483eae6e9363a8428f71",
+            "src/indexlens/prices/ingestion.py": "45f86d391341ef93d19cac9b4e97e564bf0086954fc939f40a8d61e378d978dd",
+            "src/indexlens/prices/loading.py": "e40aae9eca416ce1a0b5210b7834c679b83da95956e81959e57e7579d29433f5",
+            "src/indexlens/prices/metadata.py": "783fa3c6f15a29a7439d2f933bd6bd153c5ab790d24993f58fc7540eaeea88ee",
+            "src/indexlens/prices/normalization.py": "74f276bf921930df90676d8e107177b21b3930262ada36161ee5e9c27b4e5f02",
+            "src/indexlens/prices/yahoo.py": "2b06555cbe83641b11ca9bc4928c01163a5f68ed4e40b3bff981e73afd464f46",
+            "src/indexlens/prices/yahoo_worker.py": "fa9bffbb93b7161384d89d388e40181d5b2fb096b5cb5ed86c4b0c37a47f881c",
+            "src/indexlens/research/__init__.py": "71681f83229edc30767909a33ea8f9bcbcc2eb268e0b523879408b23f5171f81",
+            "src/indexlens/research/__main__.py": "6929b3e623af4ba9498a58740d9a77916fab7b3ad359b6007bc38833abb4130f",
+            "src/indexlens/research/cutoffs.py": "0331e7b8ded866ab1532d3b1c3484eb4b5fbe1cfb04c939483d8c33b4121a81a",
+            "src/indexlens/research/labels.py": "ad19bfd42cc0a8f8cb71a39c9efe3db00cac2a7517a4bfe0c7bb68061bcd3a3f",
+            "src/indexlens/research/model.py": "bdcb9e8d5ed8bc1c1652095fe3a2012187b7d71ac540749a9f55321eea5c4db1",
+            "src/indexlens/research/provenance.py": "53088c004a379034eb8d0e31aa67b4cabd31c4c6a8dd9e182e4e25052a8e1422",
+            "src/indexlens/research/workflow.py": "5b162b525640de345f4ff438b6a4f44974eda93972084cdcd14c55cdb34c061a",
+            "pyproject.toml": "a085299ed74f9adf8c4c906917331ea5a7fd4a96a45e110ecc136273fd309c54"
+          },
+          "revision": "11fa4a8f9ddb4c06ad75755a5fc6040f4921c595",
+          "dirty": true
+        },
+        "package_versions": {
+          "numpy": "2.5.2",
+          "scikit-learn": "1.7.2",
+          "scipy": "1.18.1"
+        }
+      }
+    },
+    "model_labels": {
+      "baseline": "Constant-probability baseline",
+      "matched_three": "Three-feature logistic regression",
+      "logistic": "Nine-feature logistic regression"
+    },
+    "summaries": {
+      "train": {
+        "candidates": {
+          "observations": 17632,
+          "positive_observations": 62,
+          "negative_observations": 17570,
+          "distinct_removal_events": 61,
+          "identities": 562
+        },
+        "after_source_screen": {
+          "observations": 17264,
+          "positive_observations": 52,
+          "negative_observations": 17212,
+          "distinct_removal_events": 51,
+          "identities": 544
+        },
+        "eligible": {
+          "observations": 15289,
+          "positive_observations": 25,
+          "negative_observations": 15264,
+          "distinct_removal_events": 25,
+          "identities": 503
+        },
+        "excluded_observations": 2343,
+        "exclusion_reason_counts": {
+          "benchmark_warm_up": 1596,
+          "warm_up": 1596,
+          "approximate_removal_date": 356,
+          "benchmark_missing_reference_observation": 1128,
+          "missing_reference_observation": 1128,
+          "outside_declared_source_population": 368,
+          "provider_failed": 711,
+          "unresolved_mapping": 725,
+          "outside_mapping_dates": 887,
+          "approximate_addition_date": 13
+        }
+      },
+      "test": {
+        "candidates": {
+          "observations": 9564,
+          "positive_observations": 37,
+          "negative_observations": 9527,
+          "distinct_removal_events": 37,
+          "identities": 538
+        },
+        "after_source_screen": {
+          "observations": 9430,
+          "positive_observations": 31,
+          "negative_observations": 9399,
+          "distinct_removal_events": 31,
+          "identities": 529
+        },
+        "eligible": {
+          "observations": 9252,
+          "positive_observations": 19,
+          "negative_observations": 9233,
+          "distinct_removal_events": 19,
+          "identities": 513
+        },
+        "excluded_observations": 312,
+        "exclusion_reason_counts": {
+          "benchmark_missing_reference_observation": 266,
+          "benchmark_warm_up": 274,
+          "missing_reference_observation": 266,
+          "provider_failed": 132,
+          "unresolved_mapping": 132,
+          "warm_up": 274,
+          "approximate_removal_date": 134,
+          "outside_declared_source_population": 134,
+          "outside_mapping_dates": 43,
+          "missing_close": 3,
+          "missing_volume": 3,
+          "unusable_close": 3,
+          "unusable_volume": 3
+        }
+      }
+    },
+    "input_sha256": {
+      "manifest": "a0dc723dfdc34105e8154c6aa993284c295fa4eb011f6abd6f7be8f59b54c2cb",
+      "review": "276d312fd4cfbfe60956ea78b8c1a6583dfe4556e83abed013f1f11014bfecc8",
+      "ingestion_report": "2d3888d0ca9bdd9c81c0acc19c788ee0f7e00f51ad49509e74156aa4425a2e9d",
+      "benchmark_review": "998f9032a7d0c4098a49cc729d3510543f144ba0017d65f7b49bb6d704855455",
+      "config": "83cd669613cd32ca02f25dba96c35ba0a9df6fae37198c243f73df3d29979d4a"
+    },
+    "code": {
+      "revision": "11fa4a8f9ddb4c06ad75755a5fc6040f4921c595",
+      "dirty": true,
+      "file_sha256": {
+        "src/indexlens/api/__init__.py": "0057606a7dc7e1dc255ce18e368748e70b1a89b89a21c28e2df2904cea5f5bed",
+        "src/indexlens/api/app.py": "a0875ba17d332169403229ec6250994f56f81ff525e3454483bdd8ca387875c4",
+        "src/indexlens/api/explanation.py": "017f1e5fd7866934fde443266bbb01ea91eb2994877754f223bdde8654049674",
+        "src/indexlens/api/logging.py": "3f392bfea5f1275de88a6a6b772f412af738997cbd82e998dd739b3621fd9034",
+        "src/indexlens/api/openai_provider.py": "b915b946bebc4e11166c80d1fb0432920e4e0cd23b17e532b2349eda40ebc6d3",
+        "src/indexlens/api/repository.py": "9d2cde2fa18ee09471dc8cabbae17aed6bb7f84befefdefde1d75cea50c0c3b4",
+        "src/indexlens/api/request_limits.py": "dfbbfd7345ea2ede42e6e5996ff75bc21686a49d04205c692a89d998e48d1655",
+        "src/indexlens/api/schemas.py": "8dfecaa7abb0800928fd1a2af97fd8a36ee17ee8c6e0c833e632c6d5f658e39b",
+        "src/indexlens/api/service.py": "fe8ff3bd918dc6a4ebd85550626c576c90f720cf7e9ed9752f627dc3e11ad382",
+        "src/indexlens/data_audit.py": "35606dd115cb1648288a9be1805a18d41ba8b2d4d5acee922a56e6bbd8cc17a5",
+        "src/indexlens/db/__init__.py": "64424ea3b418ac85b035f2bcf4cfcdfee8d30663d29d35e1b4da4b61af51ab75",
+        "src/indexlens/db/__main__.py": "60d8105120e2b5c37856f3f3a01bac74a98f597fcf02488128003a6ff9e2ae0f",
+        "src/indexlens/db/loading.py": "feb970705a1270e0e9136debd2afce33bc12bd487a1c4bc148664143948f9624",
+        "src/indexlens/db/models.py": "c78cb2caceea2fb30b6beda23456b462cad27ff9325affba75ac309b1b8694f4",
+        "src/indexlens/db/repository.py": "d82eee122add38dccc8f81210f42097d0ff6e2e74c21d63ffc951c44c3f50687",
+        "src/indexlens/db/session.py": "b9ba906ad580b02435d9d2650df5d468fc30187292a929efab66c60a71e868af",
+        "src/indexlens/db/verification.py": "65cd938c4487413f4bf4dd95e1ec2285e17968542ef44aec61a769a990afd224",
+        "src/indexlens/features/__init__.py": "56234b16a686790d0737c819064f603dc8a7f51804226bbf2ffe3663b2ed37ae",
+        "src/indexlens/features/__main__.py": "4cbcf2ea8e9d1735c543b12565af1b7ae5d07a889d606a51995d97f3fd5f474c",
+        "src/indexlens/features/context.py": "0993a169f841bbf83d1c8cd18e347dcac70ec84eb06571fb83bea3c5f99df0df",
+        "src/indexlens/features/context_review.py": "29a48f3d48bd0d82268350a80e2afce697079fa9af506189db33fa064bba2f0f",
+        "src/indexlens/features/core.py": "6ef10c03771cc3f36a8ef4362e5cd03f5c0b55cd1f570b43cdf6aa27984b62b4",
+        "src/indexlens/features/query.py": "fdc2350e342e57c5fe5db3dbacdb600991ad7aebc18c0b15cf4018e6e3d71691",
+        "src/indexlens/features/review.py": "c628c36e3f2127ec80b894b9984fcce5312a17be4810da40911e4185384c15f1",
+        "src/indexlens/membership.py": "412e2094cace085f361bb6753d4601975d1e4953546855b8c114fc27c2018fb3",
+        "src/indexlens/prices/__init__.py": "33208375f6549cc5f4c8d7cf688e03fe16344712ff66a0415c77031c4362d7fd",
+        "src/indexlens/prices/__main__.py": "149f723fc85977e09f2b1229979e6615a779a532b926dc6f957cadc9c65af336",
+        "src/indexlens/prices/fetch.py": "3ca63bd80a6f7aed01b24a6743bb2e04a963cf6efefb483eae6e9363a8428f71",
+        "src/indexlens/prices/ingestion.py": "45f86d391341ef93d19cac9b4e97e564bf0086954fc939f40a8d61e378d978dd",
+        "src/indexlens/prices/loading.py": "e40aae9eca416ce1a0b5210b7834c679b83da95956e81959e57e7579d29433f5",
+        "src/indexlens/prices/metadata.py": "783fa3c6f15a29a7439d2f933bd6bd153c5ab790d24993f58fc7540eaeea88ee",
+        "src/indexlens/prices/normalization.py": "74f276bf921930df90676d8e107177b21b3930262ada36161ee5e9c27b4e5f02",
+        "src/indexlens/prices/yahoo.py": "2b06555cbe83641b11ca9bc4928c01163a5f68ed4e40b3bff981e73afd464f46",
+        "src/indexlens/prices/yahoo_worker.py": "fa9bffbb93b7161384d89d388e40181d5b2fb096b5cb5ed86c4b0c37a47f881c",
+        "src/indexlens/research/__init__.py": "71681f83229edc30767909a33ea8f9bcbcc2eb268e0b523879408b23f5171f81",
+        "src/indexlens/research/__main__.py": "4ce2f2da8b51dec11e36ab4dc1e227ecf720f8215ad3bbacbceb471c3ac7d1a4",
+        "src/indexlens/research/cutoffs.py": "0331e7b8ded866ab1532d3b1c3484eb4b5fbe1cfb04c939483d8c33b4121a81a",
+        "src/indexlens/research/labels.py": "ad19bfd42cc0a8f8cb71a39c9efe3db00cac2a7517a4bfe0c7bb68061bcd3a3f",
+        "src/indexlens/research/model.py": "bdcb9e8d5ed8bc1c1652095fe3a2012187b7d71ac540749a9f55321eea5c4db1",
+        "src/indexlens/research/provenance.py": "53088c004a379034eb8d0e31aa67b4cabd31c4c6a8dd9e182e4e25052a8e1422",
+        "src/indexlens/research/workflow.py": "5b162b525640de345f4ff438b6a4f44974eda93972084cdcd14c55cdb34c061a",
+        "pyproject.toml": "a085299ed74f9adf8c4c906917331ea5a7fd4a96a45e110ecc136273fd309c54"
+      }
+    },
+    "observation_artifact": {
+      "rows": 27196,
+      "sha256": "a8e2d0c9d8437ae568b51df4df6a486d4100835197f8bd003d9460bf474cefc4"
+    },
+    "price_basis": "yahoo_returned_ohlc_unadjusted_library_raw_unverified",
+    "basis_review": {
+      "status": "approved",
+      "start": "2021-12-01",
+      "end": "2026-07-31",
+      "description": "Pinned Yahoo quote Close and volume with library adjustments disabled; Adj Close excluded. This is a retrospective provider-returned basis, not certified original as-traded prices or total returns. Provider adjustments and later revisions cannot be ruled out."
+    },
+    "adjustment_settings": {
+      "actions": true,
+      "auto_adjust": false,
+      "back_adjust": false,
+      "interval": "1d",
+      "keepna": true,
+      "repair": false,
+      "rounding": false
+    },
+    "review_limitations": "Retrospective continuity between dated same-CIK common/ordinary listing anchors. Consistent periodic anchors are interpolated with maximum 550-day gaps. Where an October 2026 SEC issuer index still lists the ticker, a matching filing since 16 April 2025 supports extension through 31 July 2026. Explicit manual ticker/name/spin-off decisions and retained prior decisions are recorded separately. Citigroup uses two issuer common-dividend anchors and is an explicit exception to the periodic-class rule. This is not a daily legal-history or point-in-time information certification. Later evidence is used for retrospective eligibility, never as a numerical predictor. Missing or conflicting window data remain unavailable. Pinned Yahoo quote Close and volume with library adjustments disabled; Adj Close excluded. This is a retrospective provider-returned basis, not certified original as-traded prices or total returns. Provider adjustments and later revisions cannot be ruled out.",
+    "split": {
+      "train_reference_start": "2022-01-31",
+      "train_outcome_cutoff": "2024-12-31",
+      "test_reference_start": "2025-01-31",
+      "test_reference_end": "2026-07-31",
+      "label_horizon_days": 30,
+      "price_request_envelope": {
+        "start_inclusive": "2021-12-01",
+        "end_exclusive": "2026-08-01",
+        "note": "Warm-up buffer plus dates required for features; per-identity queries may narrow within this envelope while ensuring 21 observed closes. Outcome coverage comes from membership events, not later prices."
+      }
+    }
+  },
+  "metadata": {
+    "run_id": "nine-cutoff_0p05",
+    "report_sha256": "d90f9a072ad1396b1e0c6e531928df8bd6f09f39ecc3a8194ee5b5ebf68fcc52",
+    "threshold": 0.05,
+    "data_kind": "real",
+    "dataset_id": "yahoo-research-full-population-v2",
+    "research_version": "monthly-removal-nine-v1",
+    "feature_version": "removal-nine-features-v1",
+    "membership_sha256": "7b9a8f358cdfc83b853f44c9801be40ff0d300f4e6c09407f48f7e5cffb9f2ad",
+    "coverage_start": "2007-03-05",
+    "coverage_end": "2026-09-21"
+  },
+  "interpretation": {
+    "kind": "run",
+    "status": "available",
+    "boundary": "Predictive validity remains unestablished.",
+    "data_label": "Real source evidence with the stated coverage and limitations."
+  }
+}

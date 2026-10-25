@@ -1,0 +1,433 @@
+{
+  "data_kind": "real",
+  "explanation": "FMC [1], observed on 28 February 2025 [2], showed pronounced price weakness: the recent return of -34.55% [3] was close in magnitude to the medium-horizon return of -37.55% [4]. Aligned benchmark excess returns of -32.63 percentage points [5] and -36.26 percentage points [6], respectively, show substantial underperformance. Daily unannualized volatility of 7.69% [7], stock-to-benchmark volatility of 9.407\u00d7 [8], and drawdown from the trailing closing high of -44.61% [9] underscore the severity of the observed price conditions. Recent average dollar volume of $167,046,520.31 per session [10] exceeded the longer-window average of $108,780,356.38 per session [11]. These overlapping averages compare recent activity with a broader baseline, not consecutive-period growth, and increased activity does not identify selling pressure. These indicators do not establish fundamentals, index eligibility, committee intent or future performance [12].\n\nThe reported indicator windows have values, with stock coverage of 121 [13] observations and benchmark coverage of 121 [14] observations. Entirely absent sessions are not filled, and volatility can span gaps [15]. The basis is retrospective provider-returned Yahoo closing prices and volume with library adjustments disabled and adjusted closes excluded\u2014not certified as-traded prices or total returns. Provider adjustments and later revisions remain possible [16].\n\nFitted inputs include short-term returns (20 sessions) [17], market-relative returns (20 sessions) [18], daily return volatility (20 sessions) [19] and average dollar trading volume (20 sessions) [20], representing return, benchmark-relative, volatility and dollar-activity families. By contrast, longer-term returns (120 sessions) [21] and drawdown from the trailing closing high (120 sessions) [22] are supplementary rather than fitted predictors. The observed conditions are not evidence of which predictor drove the saved probability.\n\nSeparately, the saved removal probability over the following 30 [23] calendar days was 6.85% [24]; it exceeded the selected classification cutoff of 5.00% [25]. The attached evaluation is retrospective, not information known at the observation date [26]. Reuse of previously inspected test data makes it exploratory rather than independent validation of the cutoff or predictive usefulness [27]. Missing histories and uneven identity mapping limit generalization [28], and predictive validity remains unestablished [29].",
+  "citations": [
+    {
+      "marker": "[1]",
+      "reference": "/result/symbol",
+      "value_json": "\"FMC\"",
+      "display": "FMC"
+    },
+    {
+      "marker": "[2]",
+      "reference": "/result/observation_date",
+      "value_json": "\"2025-02-28\"",
+      "display": "28 February 2025"
+    },
+    {
+      "marker": "[3]",
+      "reference": "/result/indicators/return_20/value",
+      "value_json": "\"-0.3455125784531585565016174243201966\"",
+      "display": "-34.55%"
+    },
+    {
+      "marker": "[4]",
+      "reference": "/result/indicators/return_60/value",
+      "value_json": "\"-0.3755288300796722319169788837400159\"",
+      "display": "-37.55%"
+    },
+    {
+      "marker": "[5]",
+      "reference": "/result/indicators/excess_return_20/value",
+      "value_json": "\"-0.3262955373595421142938082956868215\"",
+      "display": "-32.63 percentage points"
+    },
+    {
+      "marker": "[6]",
+      "reference": "/result/indicators/excess_return_60/value",
+      "value_json": "\"-0.3626185219881019512846426811795176\"",
+      "display": "-36.26 percentage points"
+    },
+    {
+      "marker": "[7]",
+      "reference": "/result/indicators/volatility_20/value",
+      "value_json": "\"0.07687177437291810944306679757458222\"",
+      "display": "7.69%"
+    },
+    {
+      "marker": "[8]",
+      "reference": "/result/indicators/relative_volatility_20/value",
+      "value_json": "\"9.407444258207730884326810879612690\"",
+      "display": "9.407\u00d7"
+    },
+    {
+      "marker": "[9]",
+      "reference": "/result/indicators/drawdown_120/value",
+      "value_json": "\"-0.4461122785262557255693656704678585\"",
+      "display": "-44.61%"
+    },
+    {
+      "marker": "[10]",
+      "reference": "/result/indicators/average_dollar_volume_20/value",
+      "value_json": "\"167046520.313549037442505\"",
+      "display": "$167,046,520.31 per session"
+    },
+    {
+      "marker": "[11]",
+      "reference": "/result/indicators/average_dollar_volume_60/value",
+      "value_json": "\"108780356.3771247843319316666666667\"",
+      "display": "$108,780,356.38 per session"
+    },
+    {
+      "marker": "[12]",
+      "reference": "/interpretation/boundary",
+      "value_json": "\"Descriptive indicators are separate from the saved model's fitted predictors. Close-based price returns exclude dividend reinvestment. Provider revisions and corporate-action adjustments can affect historical values; retrieval dates do not certify point-in-time availability. Windows count observed dates. Entirely absent sessions are not filled; volatility can include returns across gaps and is unannualized. Closing price times volume is an approximate trading-activity measure, not transaction turnover or the official S&P liquidity eligibility test. The short dollar-volume mean overlaps the longer mean; their ratio compares recent activity with a broader baseline, not consecutive periods. Trailing drawdown is distance below a trailing closing high, not maximum peak-to-trough loss or a forecast. Volatility measures both gains and losses. Price indicators do not establish fundamentals, index eligibility, committee intentions or future performance. Addition criteria and existing-member removal decisions differ; committee discretion remains relevant.\"",
+      "display": ""
+    },
+    {
+      "marker": "[13]",
+      "reference": "/result/coverage/stock/observations",
+      "value_json": "121",
+      "display": "121"
+    },
+    {
+      "marker": "[14]",
+      "reference": "/result/coverage/benchmark/observations",
+      "value_json": "121",
+      "display": "121"
+    },
+    {
+      "marker": "[15]",
+      "reference": "/result/limitations/2",
+      "value_json": "\"Windows count observed dates. Entirely absent sessions are not filled; volatility can include returns across gaps and is unannualized.\"",
+      "display": ""
+    },
+    {
+      "marker": "[16]",
+      "reference": "/metadata/basis_review/description",
+      "value_json": "\"Pinned Yahoo quote Close and volume with library adjustments disabled; Adj Close excluded. This is a retrospective provider-returned basis, not certified original as-traded prices or total returns. Provider adjustments and later revisions cannot be ruled out.\"",
+      "display": ""
+    },
+    {
+      "marker": "[17]",
+      "reference": "/saved_prediction/fitted_features/0",
+      "value_json": "\"return_20\"",
+      "display": "short-term returns (20 sessions)"
+    },
+    {
+      "marker": "[18]",
+      "reference": "/saved_prediction/fitted_features/5",
+      "value_json": "\"excess_return_20\"",
+      "display": "market-relative returns (20 sessions)"
+    },
+    {
+      "marker": "[19]",
+      "reference": "/saved_prediction/fitted_features/1",
+      "value_json": "\"volatility_20\"",
+      "display": "daily return volatility (20 sessions)"
+    },
+    {
+      "marker": "[20]",
+      "reference": "/saved_prediction/fitted_features/3",
+      "value_json": "\"average_dollar_volume_20\"",
+      "display": "average dollar trading volume (20 sessions)"
+    },
+    {
+      "marker": "[21]",
+      "reference": "/saved_prediction/supplementary_indicators/0",
+      "value_json": "\"return_120\"",
+      "display": "longer-term returns (120 sessions)"
+    },
+    {
+      "marker": "[22]",
+      "reference": "/saved_prediction/supplementary_indicators/1",
+      "value_json": "\"drawdown_120\"",
+      "display": "drawdown from the trailing closing high (120 sessions)"
+    },
+    {
+      "marker": "[23]",
+      "reference": "/saved_research/result/split/label_horizon_days",
+      "value_json": "30",
+      "display": "30"
+    },
+    {
+      "marker": "[24]",
+      "reference": "/saved_prediction/logistic_probability",
+      "value_json": "0.06849076303418626",
+      "display": "6.85%"
+    },
+    {
+      "marker": "[25]",
+      "reference": "/saved_prediction/threshold",
+      "value_json": "0.05",
+      "display": "5.00%"
+    },
+    {
+      "marker": "[26]",
+      "reference": "/saved_prediction/timing",
+      "value_json": "\"Saved evaluation metrics are retrospective, not facts known at the reference date.\"",
+      "display": ""
+    },
+    {
+      "marker": "[27]",
+      "reference": "/saved_research/result/limitations/9",
+      "value_json": "\"This exploratory evaluation reuses saved labels and probabilities. The fitted model and its configuration are retained from the source. Comparisons on inspected test data are not independent validation and do not establish an optimal cutoff or predictive usefulness.\"",
+      "display": ""
+    },
+    {
+      "marker": "[28]",
+      "reference": "/saved_research/result/limitations/2",
+      "value_json": "\"Source report limitation: Missing acquired/delisted histories and uneven mapping evidence select the evaluated population; results do not generalize to all members.\"",
+      "display": ""
+    },
+    {
+      "marker": "[29]",
+      "reference": "/saved_research/result/limitations/10",
+      "value_json": "\"Predictive validity remains unestablished.\"",
+      "display": ""
+    }
+  ],
+  "presentation_version": "verified-display-v5",
+  "raw_draft": {
+    "data_kind": "real",
+    "claims": [
+      {
+        "reference": "/result/symbol",
+        "value_json": "\"FMC\""
+      },
+      {
+        "reference": "/result/observation_date",
+        "value_json": "\"2025-02-28\""
+      },
+      {
+        "reference": "/result/indicators/return_20/value",
+        "value_json": "\"-0.3455125784531585565016174243201966\""
+      },
+      {
+        "reference": "/result/indicators/return_60/value",
+        "value_json": "\"-0.3755288300796722319169788837400159\""
+      },
+      {
+        "reference": "/result/indicators/excess_return_20/value",
+        "value_json": "\"-0.3262955373595421142938082956868215\""
+      },
+      {
+        "reference": "/result/indicators/excess_return_60/value",
+        "value_json": "\"-0.3626185219881019512846426811795176\""
+      },
+      {
+        "reference": "/result/indicators/volatility_20/value",
+        "value_json": "\"0.07687177437291810944306679757458222\""
+      },
+      {
+        "reference": "/result/indicators/relative_volatility_20/value",
+        "value_json": "\"9.407444258207730884326810879612690\""
+      },
+      {
+        "reference": "/result/indicators/drawdown_120/value",
+        "value_json": "\"-0.4461122785262557255693656704678585\""
+      },
+      {
+        "reference": "/result/indicators/average_dollar_volume_20/value",
+        "value_json": "\"167046520.313549037442505\""
+      },
+      {
+        "reference": "/result/indicators/average_dollar_volume_60/value",
+        "value_json": "\"108780356.3771247843319316666666667\""
+      },
+      {
+        "reference": "/interpretation/boundary",
+        "value_json": "\"Descriptive indicators are separate from the saved model's fitted predictors. Close-based price returns exclude dividend reinvestment. Provider revisions and corporate-action adjustments can affect historical values; retrieval dates do not certify point-in-time availability. Windows count observed dates. Entirely absent sessions are not filled; volatility can include returns across gaps and is unannualized. Closing price times volume is an approximate trading-activity measure, not transaction turnover or the official S&P liquidity eligibility test. The short dollar-volume mean overlaps the longer mean; their ratio compares recent activity with a broader baseline, not consecutive periods. Trailing drawdown is distance below a trailing closing high, not maximum peak-to-trough loss or a forecast. Volatility measures both gains and losses. Price indicators do not establish fundamentals, index eligibility, committee intentions or future performance. Addition criteria and existing-member removal decisions differ; committee discretion remains relevant.\""
+      },
+      {
+        "reference": "/result/coverage/stock/observations",
+        "value_json": "121"
+      },
+      {
+        "reference": "/result/coverage/benchmark/observations",
+        "value_json": "121"
+      },
+      {
+        "reference": "/result/limitations/2",
+        "value_json": "\"Windows count observed dates. Entirely absent sessions are not filled; volatility can include returns across gaps and is unannualized.\""
+      },
+      {
+        "reference": "/metadata/basis_review/description",
+        "value_json": "\"Pinned Yahoo quote Close and volume with library adjustments disabled; Adj Close excluded. This is a retrospective provider-returned basis, not certified original as-traded prices or total returns. Provider adjustments and later revisions cannot be ruled out.\""
+      },
+      {
+        "reference": "/saved_prediction/fitted_features/0",
+        "value_json": "\"return_20\""
+      },
+      {
+        "reference": "/saved_prediction/fitted_features/5",
+        "value_json": "\"excess_return_20\""
+      },
+      {
+        "reference": "/saved_prediction/fitted_features/1",
+        "value_json": "\"volatility_20\""
+      },
+      {
+        "reference": "/saved_prediction/fitted_features/3",
+        "value_json": "\"average_dollar_volume_20\""
+      },
+      {
+        "reference": "/saved_prediction/supplementary_indicators/0",
+        "value_json": "\"return_120\""
+      },
+      {
+        "reference": "/saved_prediction/supplementary_indicators/1",
+        "value_json": "\"drawdown_120\""
+      },
+      {
+        "reference": "/saved_research/result/split/label_horizon_days",
+        "value_json": "30"
+      },
+      {
+        "reference": "/saved_prediction/logistic_probability",
+        "value_json": "0.06849076303418626"
+      },
+      {
+        "reference": "/saved_prediction/threshold",
+        "value_json": "0.05"
+      },
+      {
+        "reference": "/saved_prediction/timing",
+        "value_json": "\"Saved evaluation metrics are retrospective, not facts known at the reference date.\""
+      },
+      {
+        "reference": "/saved_research/result/limitations/9",
+        "value_json": "\"This exploratory evaluation reuses saved labels and probabilities. The fitted model and its configuration are retained from the source. Comparisons on inspected test data are not independent validation and do not establish an optimal cutoff or predictive usefulness.\""
+      },
+      {
+        "reference": "/saved_research/result/limitations/2",
+        "value_json": "\"Source report limitation: Missing acquired/delisted histories and uneven mapping evidence select the evaluated population; results do not generalize to all members.\""
+      },
+      {
+        "reference": "/saved_research/result/limitations/10",
+        "value_json": "\"Predictive validity remains unestablished.\""
+      }
+    ],
+    "explanation": "{{c0}}, observed on {{c1}}, showed pronounced price weakness: the recent return of {{c2}} was close in magnitude to the medium-horizon return of {{c3}}. Aligned benchmark excess returns of {{c4}} and {{c5}}, respectively, show substantial underperformance. Daily unannualized volatility of {{c6}}, stock-to-benchmark volatility of {{c7}}, and drawdown from the trailing closing high of {{c8}} underscore the severity of the observed price conditions. Recent average dollar volume of {{c9}} exceeded the longer-window average of {{c10}}. These overlapping averages compare recent activity with a broader baseline, not consecutive-period growth, and increased activity does not identify selling pressure. These indicators do not establish fundamentals, index eligibility, committee intent or future performance {{c11}}.\n\nThe reported indicator windows have values, with stock coverage of {{c12}} observations and benchmark coverage of {{c13}} observations. Entirely absent sessions are not filled, and volatility can span gaps {{c14}}. The basis is retrospective provider-returned Yahoo closing prices and volume with library adjustments disabled and adjusted closes excluded\u2014not certified as-traded prices or total returns. Provider adjustments and later revisions remain possible {{c15}}.\n\nFitted inputs include {{c16}}, {{c17}}, {{c18}} and {{c19}}, representing return, benchmark-relative, volatility and dollar-activity families. By contrast, {{c20}} and {{c21}} are supplementary rather than fitted predictors. The observed conditions are not evidence of which predictor drove the saved probability.\n\nSeparately, the saved removal probability over the following {{c22}} calendar days was {{c23}}; it exceeded the selected classification cutoff of {{c24}}. The attached evaluation is retrospective, not information known at the observation date {{c25}}. Reuse of previously inspected test data makes it exploratory rather than independent validation of the cutoff or predictive usefulness {{c26}}. Missing histories and uneven identity mapping limit generalization {{c27}}, and predictive validity remains unestablished {{c28}}."
+  },
+  "claims": [
+    {
+      "reference": "/result/symbol",
+      "value_json": "\"FMC\""
+    },
+    {
+      "reference": "/result/observation_date",
+      "value_json": "\"2025-02-28\""
+    },
+    {
+      "reference": "/result/indicators/return_20/value",
+      "value_json": "\"-0.3455125784531585565016174243201966\""
+    },
+    {
+      "reference": "/result/indicators/return_60/value",
+      "value_json": "\"-0.3755288300796722319169788837400159\""
+    },
+    {
+      "reference": "/result/indicators/excess_return_20/value",
+      "value_json": "\"-0.3262955373595421142938082956868215\""
+    },
+    {
+      "reference": "/result/indicators/excess_return_60/value",
+      "value_json": "\"-0.3626185219881019512846426811795176\""
+    },
+    {
+      "reference": "/result/indicators/volatility_20/value",
+      "value_json": "\"0.07687177437291810944306679757458222\""
+    },
+    {
+      "reference": "/result/indicators/relative_volatility_20/value",
+      "value_json": "\"9.407444258207730884326810879612690\""
+    },
+    {
+      "reference": "/result/indicators/drawdown_120/value",
+      "value_json": "\"-0.4461122785262557255693656704678585\""
+    },
+    {
+      "reference": "/result/indicators/average_dollar_volume_20/value",
+      "value_json": "\"167046520.313549037442505\""
+    },
+    {
+      "reference": "/result/indicators/average_dollar_volume_60/value",
+      "value_json": "\"108780356.3771247843319316666666667\""
+    },
+    {
+      "reference": "/interpretation/boundary",
+      "value_json": "\"Descriptive indicators are separate from the saved model's fitted predictors. Close-based price returns exclude dividend reinvestment. Provider revisions and corporate-action adjustments can affect historical values; retrieval dates do not certify point-in-time availability. Windows count observed dates. Entirely absent sessions are not filled; volatility can include returns across gaps and is unannualized. Closing price times volume is an approximate trading-activity measure, not transaction turnover or the official S&P liquidity eligibility test. The short dollar-volume mean overlaps the longer mean; their ratio compares recent activity with a broader baseline, not consecutive periods. Trailing drawdown is distance below a trailing closing high, not maximum peak-to-trough loss or a forecast. Volatility measures both gains and losses. Price indicators do not establish fundamentals, index eligibility, committee intentions or future performance. Addition criteria and existing-member removal decisions differ; committee discretion remains relevant.\""
+    },
+    {
+      "reference": "/result/coverage/stock/observations",
+      "value_json": "121"
+    },
+    {
+      "reference": "/result/coverage/benchmark/observations",
+      "value_json": "121"
+    },
+    {
+      "reference": "/result/limitations/2",
+      "value_json": "\"Windows count observed dates. Entirely absent sessions are not filled; volatility can include returns across gaps and is unannualized.\""
+    },
+    {
+      "reference": "/metadata/basis_review/description",
+      "value_json": "\"Pinned Yahoo quote Close and volume with library adjustments disabled; Adj Close excluded. This is a retrospective provider-returned basis, not certified original as-traded prices or total returns. Provider adjustments and later revisions cannot be ruled out.\""
+    },
+    {
+      "reference": "/saved_prediction/fitted_features/0",
+      "value_json": "\"return_20\""
+    },
+    {
+      "reference": "/saved_prediction/fitted_features/5",
+      "value_json": "\"excess_return_20\""
+    },
+    {
+      "reference": "/saved_prediction/fitted_features/1",
+      "value_json": "\"volatility_20\""
+    },
+    {
+      "reference": "/saved_prediction/fitted_features/3",
+      "value_json": "\"average_dollar_volume_20\""
+    },
+    {
+      "reference": "/saved_prediction/supplementary_indicators/0",
+      "value_json": "\"return_120\""
+    },
+    {
+      "reference": "/saved_prediction/supplementary_indicators/1",
+      "value_json": "\"drawdown_120\""
+    },
+    {
+      "reference": "/saved_research/result/split/label_horizon_days",
+      "value_json": "30"
+    },
+    {
+      "reference": "/saved_prediction/logistic_probability",
+      "value_json": "0.06849076303418626"
+    },
+    {
+      "reference": "/saved_prediction/threshold",
+      "value_json": "0.05"
+    },
+    {
+      "reference": "/saved_prediction/timing",
+      "value_json": "\"Saved evaluation metrics are retrospective, not facts known at the reference date.\""
+    },
+    {
+      "reference": "/saved_research/result/limitations/9",
+      "value_json": "\"This exploratory evaluation reuses saved labels and probabilities. The fitted model and its configuration are retained from the source. Comparisons on inspected test data are not independent validation and do not establish an optimal cutoff or predictive usefulness.\""
+    },
+    {
+      "reference": "/saved_research/result/limitations/2",
+      "value_json": "\"Source report limitation: Missing acquired/delisted histories and uneven mapping evidence select the evaluated population; results do not generalize to all members.\""
+    },
+    {
+      "reference": "/saved_research/result/limitations/10",
+      "value_json": "\"Predictive validity remains unestablished.\""
+    }
+  ],
+  "evidence_sha256": "8651d9466fab679bbf9f91f9e739f49963ec37e18525292e5171a758566b76e2",
+  "limitations": [
+    "Real source evidence with the stated coverage and limitations.",
+    "Descriptive indicators are separate from the saved model's fitted predictors. Close-based price returns exclude dividend reinvestment. Provider revisions and corporate-action adjustments can affect historical values; retrieval dates do not certify point-in-time availability. Windows count observed dates. Entirely absent sessions are not filled; volatility can include returns across gaps and is unannualized. Closing price times volume is an approximate trading-activity measure, not transaction turnover or the official S&P liquidity eligibility test. The short dollar-volume mean overlaps the longer mean; their ratio compares recent activity with a broader baseline, not consecutive periods. Trailing drawdown is distance below a trailing closing high, not maximum peak-to-trough loss or a forecast. Volatility measures both gains and losses. Price indicators do not establish fundamentals, index eligibility, committee intentions or future performance. Addition criteria and existing-member removal decisions differ; committee discretion remains relevant.",
+    "References and scalar values were checked against the supplied evidence. Schema and claim checks do not establish the accuracy of qualitative prose."
+  ],
+  "validation": {
+    "schema": true,
+    "references": true,
+    "scalar_claims": true,
+    "qualitative_accuracy": "not_established"
+  }
+}

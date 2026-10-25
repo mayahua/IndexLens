@@ -174,7 +174,7 @@ def test_responses_schema_settings_and_evidence(
     assert request["text"]["format"]["strict"] is True
     assert "untrusted" in request["instructions"]
     assert provider.options[0]["max_retries"] == 0
-    assert provider.options[0]["timeout"] == 30
+    assert provider.options[0]["timeout"] == 60
     assert "synthetic-test-key" not in response.text
 
 

@@ -1,0 +1,575 @@
+{
+  "research_version": "monthly-removal-nine-v1",
+  "feature_version": "removal-nine-features-v1",
+  "model_version": "scaled-logistic-nine-v1",
+  "features": [
+    "return_20",
+    "volatility_20",
+    "return_60",
+    "average_dollar_volume_20",
+    "average_dollar_volume_60",
+    "excess_return_20",
+    "excess_return_60",
+    "relative_volatility_20",
+    "dollar_volume_20_to_60_ratio"
+  ],
+  "comparator_features": [
+    "return_20",
+    "volatility_20",
+    "average_volume_20"
+  ],
+  "parameters": {
+    "C": 1.0,
+    "solver": "lbfgs",
+    "penalty": "l2",
+    "fit_intercept": true,
+    "class_weight": null,
+    "max_iter": 1000,
+    "tol": 1e-08,
+    "random_state": 42
+  },
+  "source_report_sha256": "f3b7f10e4a03c1fe209a6cc52516fb8aadcd9ec42cef2c681bdde307cf094400",
+  "observation_artifact_sha256": "a8e2d0c9d8437ae568b51df4df6a486d4100835197f8bd003d9460bf474cefc4",
+  "cohort": {
+    "train": {
+      "observations": 15289,
+      "positive_observations": 25,
+      "negative_observations": 15264,
+      "distinct_removal_events": 25,
+      "identities": 503
+    },
+    "test": {
+      "observations": 9252,
+      "positive_observations": 19,
+      "negative_observations": 9233,
+      "distinct_removal_events": 19,
+      "identities": 513
+    }
+  },
+  "baseline_probability": 0.0016351625351559945,
+  "metrics": {
+    "baseline": {
+      "precision": null,
+      "recall": 0.0,
+      "f1": 0.0,
+      "average_precision": 0.002053610030263727,
+      "brier_score": 0.0020495678144134893,
+      "observations": 9252,
+      "predicted_removals": 0,
+      "false_alarms": 0,
+      "true_positives": 0,
+      "false_negatives": 19,
+      "threshold": 0.05,
+      "confusion_matrix": [
+        [
+          9233,
+          0
+        ],
+        [
+          19,
+          0
+        ]
+      ],
+      "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+      "undefined": {
+        "precision": "zero_denominator"
+      },
+      "limitations": []
+    },
+    "matched_three": {
+      "precision": 0.125,
+      "recall": 0.05263157894736842,
+      "f1": 0.07407407407407407,
+      "average_precision": 0.028536669582977098,
+      "brier_score": 0.0020386265975106655,
+      "observations": 9252,
+      "predicted_removals": 8,
+      "false_alarms": 7,
+      "true_positives": 1,
+      "false_negatives": 18,
+      "threshold": 0.05,
+      "confusion_matrix": [
+        [
+          9226,
+          7
+        ],
+        [
+          18,
+          1
+        ]
+      ],
+      "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+      "undefined": {},
+      "limitations": []
+    },
+    "logistic": {
+      "precision": 0.14285714285714285,
+      "recall": 0.05263157894736842,
+      "f1": 0.07692307692307693,
+      "average_precision": 0.036832804363353844,
+      "brier_score": 0.00202764592763664,
+      "observations": 9252,
+      "predicted_removals": 7,
+      "false_alarms": 6,
+      "true_positives": 1,
+      "false_negatives": 18,
+      "threshold": 0.05,
+      "confusion_matrix": [
+        [
+          9227,
+          6
+        ],
+        [
+          18,
+          1
+        ]
+      ],
+      "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+      "undefined": {},
+      "limitations": []
+    }
+  },
+  "cutoffs": [
+    {
+      "threshold": 0.002,
+      "report_sha256": "db05564c39ce09c64d6e943f8f312e226afac6d17786582b790a9684e7cf4768",
+      "models": {
+        "baseline": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "average_precision": 0.002053610030263727,
+          "brier_score": 0.0020495678144134893,
+          "observations": 9252,
+          "predicted_removals": 0,
+          "false_alarms": 0,
+          "true_positives": 0,
+          "false_negatives": 19,
+          "threshold": 0.002,
+          "confusion_matrix": [
+            [
+              9233,
+              0
+            ],
+            [
+              19,
+              0
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {
+            "precision": "zero_denominator"
+          },
+          "limitations": []
+        },
+        "matched_three": {
+          "precision": 0.006057546693589096,
+          "recall": 0.631578947368421,
+          "f1": 0.012,
+          "average_precision": 0.028536669582977098,
+          "brier_score": 0.0020386265975106655,
+          "observations": 9252,
+          "predicted_removals": 1981,
+          "false_alarms": 1969,
+          "true_positives": 12,
+          "false_negatives": 7,
+          "threshold": 0.002,
+          "confusion_matrix": [
+            [
+              7264,
+              1969
+            ],
+            [
+              7,
+              12
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {},
+          "limitations": []
+        },
+        "logistic": {
+          "precision": 0.008415147265077139,
+          "recall": 0.9473684210526315,
+          "f1": 0.016682113067655237,
+          "average_precision": 0.036832804363353844,
+          "brier_score": 0.00202764592763664,
+          "observations": 9252,
+          "predicted_removals": 2139,
+          "false_alarms": 2121,
+          "true_positives": 18,
+          "false_negatives": 1,
+          "threshold": 0.002,
+          "confusion_matrix": [
+            [
+              7112,
+              2121
+            ],
+            [
+              1,
+              18
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {},
+          "limitations": []
+        }
+      }
+    },
+    {
+      "threshold": 0.005,
+      "report_sha256": "ca34d0ddb75cadffe6d5f2369c9af20b1367921ae0fa7ef6345a2f37646d92e6",
+      "models": {
+        "baseline": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "average_precision": 0.002053610030263727,
+          "brier_score": 0.0020495678144134893,
+          "observations": 9252,
+          "predicted_removals": 0,
+          "false_alarms": 0,
+          "true_positives": 0,
+          "false_negatives": 19,
+          "threshold": 0.005,
+          "confusion_matrix": [
+            [
+              9233,
+              0
+            ],
+            [
+              19,
+              0
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {
+            "precision": "zero_denominator"
+          },
+          "limitations": []
+        },
+        "matched_three": {
+          "precision": 0.011049723756906077,
+          "recall": 0.21052631578947367,
+          "f1": 0.02099737532808399,
+          "average_precision": 0.028536669582977098,
+          "brier_score": 0.0020386265975106655,
+          "observations": 9252,
+          "predicted_removals": 362,
+          "false_alarms": 358,
+          "true_positives": 4,
+          "false_negatives": 15,
+          "threshold": 0.005,
+          "confusion_matrix": [
+            [
+              8875,
+              358
+            ],
+            [
+              15,
+              4
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {},
+          "limitations": []
+        },
+        "logistic": {
+          "precision": 0.01606425702811245,
+          "recall": 0.42105263157894735,
+          "f1": 0.030947775628626693,
+          "average_precision": 0.036832804363353844,
+          "brier_score": 0.00202764592763664,
+          "observations": 9252,
+          "predicted_removals": 498,
+          "false_alarms": 490,
+          "true_positives": 8,
+          "false_negatives": 11,
+          "threshold": 0.005,
+          "confusion_matrix": [
+            [
+              8743,
+              490
+            ],
+            [
+              11,
+              8
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {},
+          "limitations": []
+        }
+      }
+    },
+    {
+      "threshold": 0.01,
+      "report_sha256": "57a7cea6b20bd238f9dd6447c70d778689b6cf2663a5a8e9e976c174d06eac6f",
+      "models": {
+        "baseline": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "average_precision": 0.002053610030263727,
+          "brier_score": 0.0020495678144134893,
+          "observations": 9252,
+          "predicted_removals": 0,
+          "false_alarms": 0,
+          "true_positives": 0,
+          "false_negatives": 19,
+          "threshold": 0.01,
+          "confusion_matrix": [
+            [
+              9233,
+              0
+            ],
+            [
+              19,
+              0
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {
+            "precision": "zero_denominator"
+          },
+          "limitations": []
+        },
+        "matched_three": {
+          "precision": 0.03333333333333333,
+          "recall": 0.21052631578947367,
+          "f1": 0.05755395683453238,
+          "average_precision": 0.028536669582977098,
+          "brier_score": 0.0020386265975106655,
+          "observations": 9252,
+          "predicted_removals": 120,
+          "false_alarms": 116,
+          "true_positives": 4,
+          "false_negatives": 15,
+          "threshold": 0.01,
+          "confusion_matrix": [
+            [
+              9117,
+              116
+            ],
+            [
+              15,
+              4
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {},
+          "limitations": []
+        },
+        "logistic": {
+          "precision": 0.039473684210526314,
+          "recall": 0.3157894736842105,
+          "f1": 0.07017543859649122,
+          "average_precision": 0.036832804363353844,
+          "brier_score": 0.00202764592763664,
+          "observations": 9252,
+          "predicted_removals": 152,
+          "false_alarms": 146,
+          "true_positives": 6,
+          "false_negatives": 13,
+          "threshold": 0.01,
+          "confusion_matrix": [
+            [
+              9087,
+              146
+            ],
+            [
+              13,
+              6
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {},
+          "limitations": []
+        }
+      }
+    },
+    {
+      "threshold": 0.05,
+      "report_sha256": "d90f9a072ad1396b1e0c6e531928df8bd6f09f39ecc3a8194ee5b5ebf68fcc52",
+      "models": {
+        "baseline": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "average_precision": 0.002053610030263727,
+          "brier_score": 0.0020495678144134893,
+          "observations": 9252,
+          "predicted_removals": 0,
+          "false_alarms": 0,
+          "true_positives": 0,
+          "false_negatives": 19,
+          "threshold": 0.05,
+          "confusion_matrix": [
+            [
+              9233,
+              0
+            ],
+            [
+              19,
+              0
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {
+            "precision": "zero_denominator"
+          },
+          "limitations": []
+        },
+        "matched_three": {
+          "precision": 0.125,
+          "recall": 0.05263157894736842,
+          "f1": 0.07407407407407407,
+          "average_precision": 0.028536669582977098,
+          "brier_score": 0.0020386265975106655,
+          "observations": 9252,
+          "predicted_removals": 8,
+          "false_alarms": 7,
+          "true_positives": 1,
+          "false_negatives": 18,
+          "threshold": 0.05,
+          "confusion_matrix": [
+            [
+              9226,
+              7
+            ],
+            [
+              18,
+              1
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {},
+          "limitations": []
+        },
+        "logistic": {
+          "precision": 0.14285714285714285,
+          "recall": 0.05263157894736842,
+          "f1": 0.07692307692307693,
+          "average_precision": 0.036832804363353844,
+          "brier_score": 0.00202764592763664,
+          "observations": 9252,
+          "predicted_removals": 7,
+          "false_alarms": 6,
+          "true_positives": 1,
+          "false_negatives": 18,
+          "threshold": 0.05,
+          "confusion_matrix": [
+            [
+              9227,
+              6
+            ],
+            [
+              18,
+              1
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {},
+          "limitations": []
+        }
+      }
+    },
+    {
+      "threshold": 0.1,
+      "report_sha256": "76f55dfc89ee5af52d5610576937f06075a97c97aaa926a6bb7c8ef81478dd76",
+      "models": {
+        "baseline": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "average_precision": 0.002053610030263727,
+          "brier_score": 0.0020495678144134893,
+          "observations": 9252,
+          "predicted_removals": 0,
+          "false_alarms": 0,
+          "true_positives": 0,
+          "false_negatives": 19,
+          "threshold": 0.1,
+          "confusion_matrix": [
+            [
+              9233,
+              0
+            ],
+            [
+              19,
+              0
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {
+            "precision": "zero_denominator"
+          },
+          "limitations": []
+        },
+        "matched_three": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "average_precision": 0.028536669582977098,
+          "brier_score": 0.0020386265975106655,
+          "observations": 9252,
+          "predicted_removals": 3,
+          "false_alarms": 3,
+          "true_positives": 0,
+          "false_negatives": 19,
+          "threshold": 0.1,
+          "confusion_matrix": [
+            [
+              9230,
+              3
+            ],
+            [
+              19,
+              0
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {},
+          "limitations": []
+        },
+        "logistic": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "average_precision": 0.036832804363353844,
+          "brier_score": 0.00202764592763664,
+          "observations": 9252,
+          "predicted_removals": 3,
+          "false_alarms": 3,
+          "true_positives": 0,
+          "false_negatives": 19,
+          "threshold": 0.1,
+          "confusion_matrix": [
+            [
+              9230,
+              3
+            ],
+            [
+              19,
+              0
+            ]
+          ],
+          "confusion_matrix_order": "rows actual [0,1], columns predicted [0,1]",
+          "undefined": {},
+          "limitations": []
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Retrospective membership and downloaded prices do not establish point-in-time availability. Later revisions may affect values. Nine specified predictors enter the primary model; other indicators are supplementary descriptive context.",
+    "Mapping evidence and approval bounds are retrospective assumptions; unresolved identities and dates remain unavailable.",
+    "Missing acquired/delisted histories and uneven mapping evidence select the evaluated population; results do not generalize to all members.",
+    "Monthly 30-day windows can count one event twice and miss other events. Repeated securities and clustered removals are dependent observations.",
+    "Observed-session windows retain dated invalid rows; entirely absent interior sessions remain a separate ingestion coverage limitation.",
+    "Removal probabilities are distinct from descriptive momentum ranks.",
+    "Feature selection followed repeated inspection of this historical test period. Matched-cohort comparisons are exploratory and do not establish independent predictive improvement. Rare removals make small Brier scores possible even for a weak constant baseline.",
+    "The selected 0.05 classification cutoff is exploratory; performance on unseen data remains unverified."
+  ],
+  "live_explanation_status": "This file contains numerical research results only. Reviewed application-rendered explanations are documented in model-comparison/README.md and company-financial-context/README.md."
+}

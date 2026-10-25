@@ -10,7 +10,8 @@ to a predictive model. IndexLens calculates and uses these features in three way
 - **Removal research (`removal-nine-features-v1`):** Nine predictors based on
   price, activity and benchmark-relative histories support [monthly S&P 500 removal research](research.md).
 - **Financial context (`financial-context-v1`):** Sixteen features, including
-  those nine predictors, provide broader historical context for analysis.
+  those nine predictors, provide broader historical context for analysis and
+  [evidence-backed explanations](explanations.md).
 
 Momentum rankings describe past performance, the removal model estimates a
 defined future outcome, and financial context provides supporting evidence.
@@ -230,4 +231,4 @@ The primary `removal-nine-features-v1` order is recorded in the [research guide]
 
 The financial-context GET response contains sixteen features, including the nine model predictors. The separate feature endpoint exposes `average_volume_20` (average share volume), which differs from average **dollar** volume and is not a fitted input of the nine-feature model. Supplementary features remain independently available or null with reasons, rather than affecting research eligibility.
 
-The calculation's original input fingerprint is exposed as `research_input_sha256` for exact saved-input matching; `input_sha256` continues to fingerprint the public GET inputs.
+Financial evidence labels saved `fitted_features` and `fitted_values` separately from `supplementary_indicators`. The calculation's original input fingerprint is exposed as `research_input_sha256` for exact saved-input matching; `input_sha256` continues to fingerprint the public GET inputs.

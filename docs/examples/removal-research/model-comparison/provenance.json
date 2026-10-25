@@ -1,0 +1,33 @@
+{
+  "title": "Model comparison",
+  "kind": "application_side_rendering_of_original_generation",
+  "provider": "openai",
+  "generation": {
+    "actual_model": "gpt-6-astra",
+    "requested_reasoning_effort": "medium",
+    "effective_reasoning_effort": "medium",
+    "created_at_utc": "2026-10-24T20:11:39+00:00"
+  },
+  "presentation_version": "verified-display-v5",
+  "original_presentation_version": "verified-display-v2",
+  "original_application_response_sha256": "1e5ba8ef0c9c43187a4911b29eb27dff84039d9398dec087e0331e3fb64fdf18",
+  "original_evidence_sha256": "3ff3973ea3d89fbaee8416216a6e5ee714ede39f4e3b3dbfe98050eab7679db3",
+  "public_evidence_sha256": "cf8e870399ce447b47e2e7928a8db6ea40ed26413c9cfb8089484ccd7e956d18",
+  "raw_draft_sha256": "d2cbe1099bd05ab36a5b706fcb561803c7f994713a6d6bc3c1af6f7e61c4470f",
+  "structured_explanation_sha256": "70016c3c673ea975c85789f38af6045b992f0bac4b23f5c5dc12d506dc4522b8",
+  "readable_sha256": "9f9caeab6a81246dc162a29b49f066ea4b329b2ce43ef7d2dbdec19ba99c7a32",
+  "evidence_omissions": [
+    {
+      "reference": "/result/evaluation/derivation/source_report",
+      "value_sha256": "44251cadbafa984037e33a8f40de830a134743bb38f8f23a58dbbbe8191f0867",
+      "reason": "Operational source location"
+    },
+    {
+      "reference": "/result/evaluation/derivation/code/working_tree_status",
+      "value_sha256": "fb51652da4aeb1f20b1f9f9c7f27b796e8fc5dd5993d1d1188099eb05d172305",
+      "reason": "Internal working-tree inventory"
+    }
+  ],
+  "hash_encoding": "SHA-256 of UTF-8 application canonical JSON: ensure_ascii=True, allow_nan=False, compact separators, insertion order retained. Application response and readable hashes cover file bytes.",
+  "verification_scope": "Public hashes and deterministic rendering are locally reproducible. Original response and full evidence hashes identify retained originals; recomputing those hashes requires the originals. Hashes do not authenticate provider origin or certify source accuracy."
+}

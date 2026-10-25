@@ -8,6 +8,18 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 
+from indexlens.prices.metadata import fingerprint
+from indexlens.research.model import (
+    NINE_FEATURES,
+    NINE_RESEARCH_VERSION,
+    validate_cutoff,
+)
+
+from .presentation import (
+    PRESENTATION_VERSION,
+    display_value,
+    required_comparison_references,
+)
 from .schemas import Identifier, Kind, SecurityId, iso_day
 from .service import ApiError, SavedResearch, Service, decision
 
@@ -42,9 +54,19 @@ class RunTarget(StrictModel):
     run_id: Identifier
 
 
+class FinancialTarget(StrictModel):
+    kind: Literal["financial_context"]
+    security_id: SecurityId
+    review_id: Identifier
+    reference_date: Date
+    benchmark_id: Identifier | None = None
+    run_id: Identifier | None = None
+
+
 class ExplainRequest(StrictModel):
     target: Annotated[
-        EventTarget | RankingTarget | RunTarget, Field(discriminator="kind")
+        EventTarget | RankingTarget | RunTarget | FinancialTarget,
+        Field(discriminator="kind"),
     ]
     question: str = Field(
         default="Summarize the evidence.", min_length=1, max_length=200
@@ -53,11 +75,13 @@ class ExplainRequest(StrictModel):
 
 class Claim(StrictModel):
     reference: str = Field(
-        min_length=1, max_length=500,
+        min_length=1,
+        max_length=500,
         description="Copy an exact reference from claim_catalog.",
     )
     value_json: str = Field(
-        min_length=1, max_length=2000,
+        min_length=1,
+        max_length=2000,
         description="Copy that catalogue entry's value_json string exactly.",
     )
 
@@ -65,11 +89,13 @@ class Claim(StrictModel):
 class Draft(StrictModel):
     data_kind: Kind
     claims: list[Claim] = Field(
-        min_length=1, max_length=12,
+        min_length=1,
+        max_length=32,
         description="Select evidence claims before writing prose; cite every entry.",
     )
     explanation: str = Field(
-        min_length=1, max_length=4000,
+        min_length=1,
+        max_length=6000,
         description=(
             "Short qualitative paragraph. Cite every claims entry with its exact "
             "zero-based placeholder: {{c0}}, {{c1}}, etc. All numerical facts, "
@@ -89,6 +115,10 @@ class ExplanationResult(StrictModel):
     validation: dict[str, bool | str]
     model: str
     provider: Literal["openai"]
+    citations: list[dict[str, Any]]
+    presentation_version: str
+    raw_draft: dict[str, Any]
+    generation: dict[str, Any]
 
 
 def check_question(request: ExplainRequest) -> None:
@@ -162,6 +192,131 @@ def ranking_evidence(service: Service, target: RankingTarget) -> dict[str, Any]:
     return result
 
 
+def financial_evidence(service: Service, target: FinancialTarget) -> dict[str, Any]:
+    evidence = service.financial_context(
+        target.security_id, target.review_id, target.reference_date, target.benchmark_id
+    )
+    result = evidence["result"]
+    # Compact the reproducible GET snapshot for the bounded model input.
+    evidence["context_snapshot_sha256"] = fingerprint(evidence)
+    inputs = result.pop("inputs")
+    result["sources"] = {
+        key: list(
+            {
+                canonical(public): public
+                for row in rows
+                for source in row["provenance"]
+                for public in [
+                    {
+                        k: v
+                        for k, v in source.items()
+                        if k not in {"record_position", "record_sha256", "issues"}
+                    }
+                ]
+            }.values()
+        )
+        for key, rows in inputs.items()
+    }
+    for indicator in result["indicators"].values():
+        dates = indicator.pop("observed_dates")
+        indicator["window"] = dict(
+            first_date=dates[0] if dates else None,
+            last_date=dates[-1] if dates else None,
+            observations=len(dates),
+            dates_sha256=fingerprint(dates),
+        )
+    if target.run_id is not None:
+        raw = service.research.run(target.run_id)
+        if raw.get("research_version") == "monthly-removal-context-v1":
+            raise ApiError(
+                422,
+                "unsupported_context_join",
+                "Use a saved-run explanation for the context experiment.",
+            )
+        if (raw["data_kind"], raw["membership_sha256"]) != (
+            evidence["metadata"]["data_kind"],
+            evidence["metadata"]["membership_sha256"],
+        ):
+            raise ApiError(422, "research_context_mismatch", "Research source differs.")
+        matches = [
+            r
+            for r in raw["evaluation"]["predictions"]
+            if (r["symbol"], r["cik"], r["reference_date"])
+            == (result["symbol"], result["cik"], str(target.reference_date))
+        ]
+        if len(matches) != 1:
+            raise ApiError(
+                422, "prediction_unavailable", "Select an exact saved prediction date."
+            )
+        nine = raw.get("research_version") == NINE_RESEARCH_VERSION
+        if nine:
+            prediction = matches[0]
+            values = {f: result["indicators"][f]["value"] for f in NINE_FEATURES}
+            if (
+                raw["evaluation"].get("fitted_features") != list(NINE_FEATURES)
+                or any(
+                    not isinstance(value, str)
+                    or re.fullmatch(r"[0-9a-f]{64}", value) is None
+                    for value in (
+                        raw.get("review_sha256"),
+                        raw.get("benchmark_review_sha256"),
+                        prediction.get("context_input_sha256"),
+                    )
+                )
+                or prediction.get("feature_observation_date")
+                != str(target.reference_date)
+                or result["observation_date"] != str(target.reference_date)
+                or prediction.get("fitted_values") != values
+                or any(result["indicators"][f]["unavailable"] for f in NINE_FEATURES)
+                or prediction.get("context_input_sha256")
+                != result.get("research_input_sha256")
+                or raw.get("review_sha256") != evidence["metadata"].get("review_sha256")
+                or raw.get("benchmark_review_sha256")
+                != ((evidence["metadata"].get("benchmark") or {}).get("review_sha256"))
+                or not prediction.get("source_record_positions")
+                or not set(prediction.get("source_record_positions", [])).issubset(
+                    evidence["metadata"]["source_record_positions"]
+                )
+            ):
+                raise ApiError(
+                    422,
+                    "research_context_mismatch",
+                    "Saved predictors, dates or reviewed input sources differ.",
+                )
+        try:
+            cutoff = validate_cutoff(raw["evaluation"]["threshold"])
+            probability = validate_cutoff(matches[0]["logistic_probability"])
+            baseline = validate_cutoff(matches[0]["baseline_probability"])
+        except (ValueError, KeyError) as exc:
+            raise ApiError(
+                422, "prediction_unavailable", "Invalid saved prediction."
+            ) from exc
+        evidence["saved_research"] = service.research.run_result(target.run_id)
+        evidence["saved_prediction"] = dict(
+            reference_date=str(target.reference_date),
+            logistic_probability=probability,
+            baseline_probability=baseline,
+            threshold=cutoff,
+            predicted_removal=probability >= cutoff,
+            fitted_features=list(NINE_FEATURES)
+            if nine
+            else ["return_20", "volatility_20", "average_volume_20"],
+            fitted_values=matches[0].get("fitted_values") if nine else None,
+            feature_observation_date=matches[0].get("feature_observation_date"),
+            context_used_for_fitting=nine,
+            supplementary_indicators=[
+                f for f in result["indicators"] if f not in NINE_FEATURES
+            ]
+            if nine
+            else list(result["indicators"]),
+            timing=(
+                "Saved evaluation metrics are retrospective, "
+                "not facts known at the reference date."
+            ),
+        )
+    return evidence
+
+
 def build_evidence(
     request: ExplainRequest, research: SavedResearch, service: Service | None = None
 ) -> dict[str, Any]:
@@ -174,7 +329,13 @@ def build_evidence(
     else:
         if service is None:
             raise RuntimeError("Database service required for event or ranking.")
-        if isinstance(target, EventTarget):
+        if isinstance(target, FinancialTarget):
+            evidence = financial_evidence(service, target)
+            available = all(
+                not v["unavailable"] for v in evidence["result"]["indicators"].values()
+            )
+            boundary = " ".join(evidence["result"]["limitations"])
+        elif isinstance(target, EventTarget):
             evidence = event_evidence(service, target)
             available = True
             boundary = (
@@ -266,18 +427,36 @@ def validate_draft(draft: Draft, evidence: dict[str, Any]) -> dict[str, Any]:
     prose = TOKEN.sub("", draft.explanation)
     if "{" in prose or "}" in prose or NUMERIC_PROSE.search(prose):
         raise ApiError(502, "invalid_claim", "Numerical prose needs checked citations.")
-    # Render the field path with its value so the cited measure remains explicit.
+    required = required_comparison_references(evidence)
+    if not required.issubset({c.reference for c in draft.claims}):
+        raise ApiError(
+            502,
+            "incomplete_comparison",
+            "The explanation omits required model comparisons.",
+        )
+    citations = [
+        dict(
+            marker=f"[{i + 1}]",
+            reference=c.reference,
+            value_json=c.value_json,
+            display=display_value(c.reference, references[c.reference], references),
+        )
+        for i, c in enumerate(draft.claims)
+    ]
     rendered = TOKEN.sub(
         lambda m: (
-            draft.claims[int(m.group(1))].reference
-            + " = "
-            + draft.claims[int(m.group(1))].value_json
-        ),
+            citations[int(m.group(1))]["display"]
+            + " "
+            + citations[int(m.group(1))]["marker"]
+        ).strip(),
         draft.explanation,
     )
     return dict(
         data_kind=draft.data_kind,
         explanation=rendered,
+        citations=citations,
+        presentation_version=PRESENTATION_VERSION,
+        raw_draft=draft.model_dump(),
         claims=[c.model_dump() for c in draft.claims],
         evidence=evidence,
         evidence_sha256=sha256(canonical(evidence).encode()).hexdigest(),

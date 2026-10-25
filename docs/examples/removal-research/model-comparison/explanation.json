@@ -1,0 +1,475 @@
+{
+  "data_kind": "real",
+  "explanation": "This retrospective research examines index removals within 30 [1] calendar days after monthly reference observations. The requested training reference start was 31 January 2022 [2], with training outcomes bounded by 31 December 2024 [3]; these are not necessarily the first eligible training observation or the last training reference date. Test reference dates ran from 31 January 2025 [4] through 31 July 2026 [5]. All comparators use the same eligible training and test cohorts: 15,289 [6] training observations with 25 [7] positive cases, and 9,252 [8] test observations with 19 [9] positive cases. Identity reviews were retrospective, and missing or conflicting windows remained unavailable. Prices were provider-returned Yahoo closing quotes with library adjustments disabled, not certified original as-traded prices or total returns; later revisions cannot be ruled out [10].\n\nThe constant baseline [11] assigned the constant training-prevalence probability of 0.16% [12], recording average precision of 0.00205 [13] and a Brier score of 0.00204957 [14]. The matched original three-feature model [15] recorded average precision of 0.02854 [16] and a Brier score of 0.00203863 [17]. The primary nine-feature model [18] had higher average precision of 0.03683 [19] and a slightly lower Brier score of 0.00202765 [20] than the comparators. Average precision measures ranking across recall levels; Brier score measures average squared probability error, not proof of calibration. With rare removals, assigning low probabilities to almost every observation can yield a small Brier score, so that score alone does not establish useful discrimination or forecasting performance.\n\nAt the selected probability cutoff of 5.00% [21], the primary model issued seven [22] removal alerts, including one [23] true positive and six [24] false positives, while it missed eighteen [25] removals. Precision was 14.29% [26] and recall was 5.26% [27]: most alerts were false alarms, and most removals were missed. This is a saved-probability cutoff evaluation [28]. It reused saved labels and probabilities without changing the fitted model or its configuration; the cutoff comparison is exploratory and does not establish an optimal cutoff [29].\n\nRare events limit interpretation. Repeated securities, clustered removals and overlapping outcome windows create dependent observations and can duplicate or miss events [30]. Missing acquired or delisted histories and uneven identity coverage restrict generalization beyond the evaluated population [31]. Feature selection followed repeated inspection of the test period, so the apparent comparative gains remain exploratory rather than independent predictive confirmation [32].",
+  "citations": [
+    {
+      "marker": "[1]",
+      "reference": "/result/split/label_horizon_days",
+      "value_json": "30",
+      "display": "30"
+    },
+    {
+      "marker": "[2]",
+      "reference": "/result/split/train_reference_start",
+      "value_json": "\"2022-01-31\"",
+      "display": "31 January 2022"
+    },
+    {
+      "marker": "[3]",
+      "reference": "/result/split/train_outcome_cutoff",
+      "value_json": "\"2024-12-31\"",
+      "display": "31 December 2024"
+    },
+    {
+      "marker": "[4]",
+      "reference": "/result/split/test_reference_start",
+      "value_json": "\"2025-01-31\"",
+      "display": "31 January 2025"
+    },
+    {
+      "marker": "[5]",
+      "reference": "/result/split/test_reference_end",
+      "value_json": "\"2026-07-31\"",
+      "display": "31 July 2026"
+    },
+    {
+      "marker": "[6]",
+      "reference": "/result/summaries/train/eligible/observations",
+      "value_json": "15289",
+      "display": "15,289"
+    },
+    {
+      "marker": "[7]",
+      "reference": "/result/summaries/train/eligible/positive_observations",
+      "value_json": "25",
+      "display": "25"
+    },
+    {
+      "marker": "[8]",
+      "reference": "/result/summaries/test/eligible/observations",
+      "value_json": "9252",
+      "display": "9,252"
+    },
+    {
+      "marker": "[9]",
+      "reference": "/result/summaries/test/eligible/positive_observations",
+      "value_json": "19",
+      "display": "19"
+    },
+    {
+      "marker": "[10]",
+      "reference": "/result/review_limitations",
+      "value_json": "\"Retrospective continuity between dated same-CIK common/ordinary listing anchors. Consistent periodic anchors are interpolated with maximum 550-day gaps. Where an October 2026 SEC issuer index still lists the ticker, a matching filing since 16 April 2025 supports extension through 31 July 2026. Explicit manual ticker/name/spin-off decisions and retained prior decisions are recorded separately. Citigroup uses two issuer common-dividend anchors and is an explicit exception to the periodic-class rule. This is not a daily legal-history or point-in-time information certification. Later evidence is used for retrospective eligibility, never as a numerical predictor. Missing or conflicting window data remain unavailable. Pinned Yahoo quote Close and volume with library adjustments disabled; Adj Close excluded. This is a retrospective provider-returned basis, not certified original as-traded prices or total returns. Provider adjustments and later revisions cannot be ruled out.\"",
+      "display": ""
+    },
+    {
+      "marker": "[11]",
+      "reference": "/result/model_labels/baseline",
+      "value_json": "\"Constant-probability baseline\"",
+      "display": "constant baseline"
+    },
+    {
+      "marker": "[12]",
+      "reference": "/result/evaluation/baseline/probability",
+      "value_json": "0.0016351625351559945",
+      "display": "0.16%"
+    },
+    {
+      "marker": "[13]",
+      "reference": "/result/evaluation/baseline/metrics/average_precision",
+      "value_json": "0.002053610030263727",
+      "display": "0.00205"
+    },
+    {
+      "marker": "[14]",
+      "reference": "/result/evaluation/baseline/metrics/brier_score",
+      "value_json": "0.0020495678144134893",
+      "display": "0.00204957"
+    },
+    {
+      "marker": "[15]",
+      "reference": "/result/model_labels/matched_three",
+      "value_json": "\"Three-feature logistic regression\"",
+      "display": "three-feature model"
+    },
+    {
+      "marker": "[16]",
+      "reference": "/result/evaluation/matched_three/metrics/average_precision",
+      "value_json": "0.028536669582977098",
+      "display": "0.02854"
+    },
+    {
+      "marker": "[17]",
+      "reference": "/result/evaluation/matched_three/metrics/brier_score",
+      "value_json": "0.0020386265975106655",
+      "display": "0.00203863"
+    },
+    {
+      "marker": "[18]",
+      "reference": "/result/model_labels/logistic",
+      "value_json": "\"Nine-feature logistic regression\"",
+      "display": "nine-feature model"
+    },
+    {
+      "marker": "[19]",
+      "reference": "/result/evaluation/logistic/metrics/average_precision",
+      "value_json": "0.036832804363353844",
+      "display": "0.03683"
+    },
+    {
+      "marker": "[20]",
+      "reference": "/result/evaluation/logistic/metrics/brier_score",
+      "value_json": "0.00202764592763664",
+      "display": "0.00202765"
+    },
+    {
+      "marker": "[21]",
+      "reference": "/result/evaluation/threshold",
+      "value_json": "0.05",
+      "display": "5.00%"
+    },
+    {
+      "marker": "[22]",
+      "reference": "/result/evaluation/logistic/metrics/predicted_removals",
+      "value_json": "7",
+      "display": "seven"
+    },
+    {
+      "marker": "[23]",
+      "reference": "/result/evaluation/logistic/metrics/true_positives",
+      "value_json": "1",
+      "display": "one"
+    },
+    {
+      "marker": "[24]",
+      "reference": "/result/evaluation/logistic/metrics/false_alarms",
+      "value_json": "6",
+      "display": "six"
+    },
+    {
+      "marker": "[25]",
+      "reference": "/result/evaluation/logistic/metrics/false_negatives",
+      "value_json": "18",
+      "display": "eighteen"
+    },
+    {
+      "marker": "[26]",
+      "reference": "/result/evaluation/logistic/metrics/precision",
+      "value_json": "0.14285714285714285",
+      "display": "14.29%"
+    },
+    {
+      "marker": "[27]",
+      "reference": "/result/evaluation/logistic/metrics/recall",
+      "value_json": "0.05263157894736842",
+      "display": "5.26%"
+    },
+    {
+      "marker": "[28]",
+      "reference": "/result/evaluation/derivation/kind",
+      "value_json": "\"saved_probability_cutoff_evaluation\"",
+      "display": ""
+    },
+    {
+      "marker": "[29]",
+      "reference": "/result/limitations/9",
+      "value_json": "\"This exploratory evaluation reuses saved labels and probabilities. The fitted model and its configuration are retained from the source. Comparisons on inspected test data are not independent validation and do not establish an optimal cutoff or predictive usefulness.\"",
+      "display": ""
+    },
+    {
+      "marker": "[30]",
+      "reference": "/result/limitations/3",
+      "value_json": "\"Source report limitation: Monthly 30-day windows can count one event twice and miss other events. Repeated securities and clustered removals are dependent observations.\"",
+      "display": ""
+    },
+    {
+      "marker": "[31]",
+      "reference": "/result/limitations/2",
+      "value_json": "\"Source report limitation: Missing acquired/delisted histories and uneven mapping evidence select the evaluated population; results do not generalize to all members.\"",
+      "display": ""
+    },
+    {
+      "marker": "[32]",
+      "reference": "/result/limitations/6",
+      "value_json": "\"Source report limitation: Feature selection followed repeated inspection of this historical test period. Matched-cohort comparisons are exploratory and do not establish independent predictive improvement. Rare removals make small Brier scores possible even for a weak constant baseline.\"",
+      "display": ""
+    }
+  ],
+  "presentation_version": "verified-display-v5",
+  "raw_draft": {
+    "data_kind": "real",
+    "claims": [
+      {
+        "reference": "/result/split/label_horizon_days",
+        "value_json": "30"
+      },
+      {
+        "reference": "/result/split/train_reference_start",
+        "value_json": "\"2022-01-31\""
+      },
+      {
+        "reference": "/result/split/train_outcome_cutoff",
+        "value_json": "\"2024-12-31\""
+      },
+      {
+        "reference": "/result/split/test_reference_start",
+        "value_json": "\"2025-01-31\""
+      },
+      {
+        "reference": "/result/split/test_reference_end",
+        "value_json": "\"2026-07-31\""
+      },
+      {
+        "reference": "/result/summaries/train/eligible/observations",
+        "value_json": "15289"
+      },
+      {
+        "reference": "/result/summaries/train/eligible/positive_observations",
+        "value_json": "25"
+      },
+      {
+        "reference": "/result/summaries/test/eligible/observations",
+        "value_json": "9252"
+      },
+      {
+        "reference": "/result/summaries/test/eligible/positive_observations",
+        "value_json": "19"
+      },
+      {
+        "reference": "/result/review_limitations",
+        "value_json": "\"Retrospective continuity between dated same-CIK common/ordinary listing anchors. Consistent periodic anchors are interpolated with maximum 550-day gaps. Where an October 2026 SEC issuer index still lists the ticker, a matching filing since 16 April 2025 supports extension through 31 July 2026. Explicit manual ticker/name/spin-off decisions and retained prior decisions are recorded separately. Citigroup uses two issuer common-dividend anchors and is an explicit exception to the periodic-class rule. This is not a daily legal-history or point-in-time information certification. Later evidence is used for retrospective eligibility, never as a numerical predictor. Missing or conflicting window data remain unavailable. Pinned Yahoo quote Close and volume with library adjustments disabled; Adj Close excluded. This is a retrospective provider-returned basis, not certified original as-traded prices or total returns. Provider adjustments and later revisions cannot be ruled out.\""
+      },
+      {
+        "reference": "/result/model_labels/baseline",
+        "value_json": "\"Constant-probability baseline\""
+      },
+      {
+        "reference": "/result/evaluation/baseline/probability",
+        "value_json": "0.0016351625351559945"
+      },
+      {
+        "reference": "/result/evaluation/baseline/metrics/average_precision",
+        "value_json": "0.002053610030263727"
+      },
+      {
+        "reference": "/result/evaluation/baseline/metrics/brier_score",
+        "value_json": "0.0020495678144134893"
+      },
+      {
+        "reference": "/result/model_labels/matched_three",
+        "value_json": "\"Three-feature logistic regression\""
+      },
+      {
+        "reference": "/result/evaluation/matched_three/metrics/average_precision",
+        "value_json": "0.028536669582977098"
+      },
+      {
+        "reference": "/result/evaluation/matched_three/metrics/brier_score",
+        "value_json": "0.0020386265975106655"
+      },
+      {
+        "reference": "/result/model_labels/logistic",
+        "value_json": "\"Nine-feature logistic regression\""
+      },
+      {
+        "reference": "/result/evaluation/logistic/metrics/average_precision",
+        "value_json": "0.036832804363353844"
+      },
+      {
+        "reference": "/result/evaluation/logistic/metrics/brier_score",
+        "value_json": "0.00202764592763664"
+      },
+      {
+        "reference": "/result/evaluation/threshold",
+        "value_json": "0.05"
+      },
+      {
+        "reference": "/result/evaluation/logistic/metrics/predicted_removals",
+        "value_json": "7"
+      },
+      {
+        "reference": "/result/evaluation/logistic/metrics/true_positives",
+        "value_json": "1"
+      },
+      {
+        "reference": "/result/evaluation/logistic/metrics/false_alarms",
+        "value_json": "6"
+      },
+      {
+        "reference": "/result/evaluation/logistic/metrics/false_negatives",
+        "value_json": "18"
+      },
+      {
+        "reference": "/result/evaluation/logistic/metrics/precision",
+        "value_json": "0.14285714285714285"
+      },
+      {
+        "reference": "/result/evaluation/logistic/metrics/recall",
+        "value_json": "0.05263157894736842"
+      },
+      {
+        "reference": "/result/evaluation/derivation/kind",
+        "value_json": "\"saved_probability_cutoff_evaluation\""
+      },
+      {
+        "reference": "/result/limitations/9",
+        "value_json": "\"This exploratory evaluation reuses saved labels and probabilities. The fitted model and its configuration are retained from the source. Comparisons on inspected test data are not independent validation and do not establish an optimal cutoff or predictive usefulness.\""
+      },
+      {
+        "reference": "/result/limitations/3",
+        "value_json": "\"Source report limitation: Monthly 30-day windows can count one event twice and miss other events. Repeated securities and clustered removals are dependent observations.\""
+      },
+      {
+        "reference": "/result/limitations/2",
+        "value_json": "\"Source report limitation: Missing acquired/delisted histories and uneven mapping evidence select the evaluated population; results do not generalize to all members.\""
+      },
+      {
+        "reference": "/result/limitations/6",
+        "value_json": "\"Source report limitation: Feature selection followed repeated inspection of this historical test period. Matched-cohort comparisons are exploratory and do not establish independent predictive improvement. Rare removals make small Brier scores possible even for a weak constant baseline.\""
+      }
+    ],
+    "explanation": "This retrospective research examines index removals within {{c0}} calendar days after monthly reference observations. The requested training reference start was {{c1}}, with training outcomes bounded by {{c2}}; these are not necessarily the first eligible training observation or the last training reference date. Test reference dates ran from {{c3}} through {{c4}}. All comparators use the same eligible training and test cohorts: {{c5}} training observations with {{c6}} positive cases, and {{c7}} test observations with {{c8}} positive cases. Identity reviews were retrospective, and missing or conflicting windows remained unavailable. Prices were provider-returned Yahoo closing quotes with library adjustments disabled, not certified original as-traded prices or total returns; later revisions cannot be ruled out {{c9}}.\n\nThe {{c10}} assigned the constant training-prevalence probability of {{c11}}, recording average precision of {{c12}} and a Brier score of {{c13}}. The matched original {{c14}} recorded average precision of {{c15}} and a Brier score of {{c16}}. The primary {{c17}} had higher average precision of {{c18}} and a slightly lower Brier score of {{c19}} than the comparators. Average precision measures ranking across recall levels; Brier score measures average squared probability error, not proof of calibration. With rare removals, assigning low probabilities to almost every observation can yield a small Brier score, so that score alone does not establish useful discrimination or forecasting performance.\n\nAt the selected probability cutoff of {{c20}}, the primary model issued {{c21}} removal alerts, including {{c22}} true positive and {{c23}} false positives, while it missed {{c24}} removals. Precision was {{c25}} and recall was {{c26}}: most alerts were false alarms, and most removals were missed. This is a saved-probability cutoff evaluation {{c27}}. It reused saved labels and probabilities without changing the fitted model or its configuration; the cutoff comparison is exploratory and does not establish an optimal cutoff {{c28}}.\n\nRare events limit interpretation. Repeated securities, clustered removals and overlapping outcome windows create dependent observations and can duplicate or miss events {{c29}}. Missing acquired or delisted histories and uneven identity coverage restrict generalization beyond the evaluated population {{c30}}. Feature selection followed repeated inspection of the test period, so the apparent comparative gains remain exploratory rather than independent predictive confirmation {{c31}}."
+  },
+  "claims": [
+    {
+      "reference": "/result/split/label_horizon_days",
+      "value_json": "30"
+    },
+    {
+      "reference": "/result/split/train_reference_start",
+      "value_json": "\"2022-01-31\""
+    },
+    {
+      "reference": "/result/split/train_outcome_cutoff",
+      "value_json": "\"2024-12-31\""
+    },
+    {
+      "reference": "/result/split/test_reference_start",
+      "value_json": "\"2025-01-31\""
+    },
+    {
+      "reference": "/result/split/test_reference_end",
+      "value_json": "\"2026-07-31\""
+    },
+    {
+      "reference": "/result/summaries/train/eligible/observations",
+      "value_json": "15289"
+    },
+    {
+      "reference": "/result/summaries/train/eligible/positive_observations",
+      "value_json": "25"
+    },
+    {
+      "reference": "/result/summaries/test/eligible/observations",
+      "value_json": "9252"
+    },
+    {
+      "reference": "/result/summaries/test/eligible/positive_observations",
+      "value_json": "19"
+    },
+    {
+      "reference": "/result/review_limitations",
+      "value_json": "\"Retrospective continuity between dated same-CIK common/ordinary listing anchors. Consistent periodic anchors are interpolated with maximum 550-day gaps. Where an October 2026 SEC issuer index still lists the ticker, a matching filing since 16 April 2025 supports extension through 31 July 2026. Explicit manual ticker/name/spin-off decisions and retained prior decisions are recorded separately. Citigroup uses two issuer common-dividend anchors and is an explicit exception to the periodic-class rule. This is not a daily legal-history or point-in-time information certification. Later evidence is used for retrospective eligibility, never as a numerical predictor. Missing or conflicting window data remain unavailable. Pinned Yahoo quote Close and volume with library adjustments disabled; Adj Close excluded. This is a retrospective provider-returned basis, not certified original as-traded prices or total returns. Provider adjustments and later revisions cannot be ruled out.\""
+    },
+    {
+      "reference": "/result/model_labels/baseline",
+      "value_json": "\"Constant-probability baseline\""
+    },
+    {
+      "reference": "/result/evaluation/baseline/probability",
+      "value_json": "0.0016351625351559945"
+    },
+    {
+      "reference": "/result/evaluation/baseline/metrics/average_precision",
+      "value_json": "0.002053610030263727"
+    },
+    {
+      "reference": "/result/evaluation/baseline/metrics/brier_score",
+      "value_json": "0.0020495678144134893"
+    },
+    {
+      "reference": "/result/model_labels/matched_three",
+      "value_json": "\"Three-feature logistic regression\""
+    },
+    {
+      "reference": "/result/evaluation/matched_three/metrics/average_precision",
+      "value_json": "0.028536669582977098"
+    },
+    {
+      "reference": "/result/evaluation/matched_three/metrics/brier_score",
+      "value_json": "0.0020386265975106655"
+    },
+    {
+      "reference": "/result/model_labels/logistic",
+      "value_json": "\"Nine-feature logistic regression\""
+    },
+    {
+      "reference": "/result/evaluation/logistic/metrics/average_precision",
+      "value_json": "0.036832804363353844"
+    },
+    {
+      "reference": "/result/evaluation/logistic/metrics/brier_score",
+      "value_json": "0.00202764592763664"
+    },
+    {
+      "reference": "/result/evaluation/threshold",
+      "value_json": "0.05"
+    },
+    {
+      "reference": "/result/evaluation/logistic/metrics/predicted_removals",
+      "value_json": "7"
+    },
+    {
+      "reference": "/result/evaluation/logistic/metrics/true_positives",
+      "value_json": "1"
+    },
+    {
+      "reference": "/result/evaluation/logistic/metrics/false_alarms",
+      "value_json": "6"
+    },
+    {
+      "reference": "/result/evaluation/logistic/metrics/false_negatives",
+      "value_json": "18"
+    },
+    {
+      "reference": "/result/evaluation/logistic/metrics/precision",
+      "value_json": "0.14285714285714285"
+    },
+    {
+      "reference": "/result/evaluation/logistic/metrics/recall",
+      "value_json": "0.05263157894736842"
+    },
+    {
+      "reference": "/result/evaluation/derivation/kind",
+      "value_json": "\"saved_probability_cutoff_evaluation\""
+    },
+    {
+      "reference": "/result/limitations/9",
+      "value_json": "\"This exploratory evaluation reuses saved labels and probabilities. The fitted model and its configuration are retained from the source. Comparisons on inspected test data are not independent validation and do not establish an optimal cutoff or predictive usefulness.\""
+    },
+    {
+      "reference": "/result/limitations/3",
+      "value_json": "\"Source report limitation: Monthly 30-day windows can count one event twice and miss other events. Repeated securities and clustered removals are dependent observations.\""
+    },
+    {
+      "reference": "/result/limitations/2",
+      "value_json": "\"Source report limitation: Missing acquired/delisted histories and uneven mapping evidence select the evaluated population; results do not generalize to all members.\""
+    },
+    {
+      "reference": "/result/limitations/6",
+      "value_json": "\"Source report limitation: Feature selection followed repeated inspection of this historical test period. Matched-cohort comparisons are exploratory and do not establish independent predictive improvement. Rare removals make small Brier scores possible even for a weak constant baseline.\""
+    }
+  ],
+  "evidence_sha256": "cf8e870399ce447b47e2e7928a8db6ea40ed26413c9cfb8089484ccd7e956d18",
+  "limitations": [
+    "Real source evidence with the stated coverage and limitations.",
+    "Predictive validity remains unestablished.",
+    "References and scalar values were checked against the supplied evidence. Schema and claim checks do not establish the accuracy of qualitative prose."
+  ],
+  "validation": {
+    "schema": true,
+    "references": true,
+    "scalar_claims": true,
+    "qualitative_accuracy": "not_established"
+  }
+}
